@@ -1,4 +1,5 @@
 import UserProgress from "../models/UserProgress.js";  // <-- import the model
+import Roadmap from "../models/Roadmap.js";
 
 // updateProgress
 export const updateProgress = async (req, res) => {
@@ -39,3 +40,36 @@ export const getProgressForLoggedInUser = async (req, res) => {
   }
 };
 
+export const getAllRoadmapProgressForUser = async (req, res) => {
+  const userId = req.params.userId;
+
+  try {
+    // ✅ Get all roadmaps
+    const allRoadmaps = await Roadmap.find({});
+    const userProgress = await UserProgress.find({ userId });
+
+    const progressMap = {};
+    userProgress.forEach((p) => {
+      progressMap[p.roadmapId.toString()] = p.completedSteps || [];
+    });
+
+    const progressData = allRoadmaps.map((r) => {
+      const totalSteps = r.sections.reduce(
+        (count, section) => count + (section.steps?.length || 0),
+        0
+      );
+      const completedSteps = progressMap[r._id.toString()] || [];
+
+      return {
+        roadmapId: r._id,
+        completedSteps,
+        totalSteps,
+      };
+    });
+
+    res.json(progressData);
+  } catch (err) {
+    console.error("Error fetching all progress:", err);
+    res.status(500).json({ error: "Failed to fetch progress" });
+  }
+};

@@ -7,16 +7,34 @@ import { useProgress } from "../context/ProgressContext";
 const Dashboard = () => {
   const [roadmaps, setRoadmaps] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [progressLoaded, setProgressLoaded] = useState(false); // ✅ new state
   const { user } = useAuth();
-  const { progressMap } = useProgress(); // ✅ Just read from context
+  const { progressMap, updateProgress } = useProgress();
 
   useEffect(() => {
     if (!user) return;
 
     const fetchData = async () => {
       try {
+        // ✅ Step 1: Get all roadmaps
         const roadmapRes = await api.get("/roadmaps");
         setRoadmaps(roadmapRes.data);
+
+        // ✅ Step 2: Get user progress from backend
+        const progressRes = await api.get(`/progress/user/${user._id}/roadmaps`);
+        const progressData = progressRes.data;
+
+        // ✅ Step 3: Update progressMap using context
+        progressData.forEach((rp) => {
+          updateProgress(
+            rp.roadmapId,
+            rp.completedSteps || [],
+            rp.totalSteps || 1
+          );
+        });
+
+        // ✅ Trigger re-render after context is updated
+        setProgressLoaded(true);
       } catch (err) {
         console.error("Error loading dashboard", err);
       } finally {
@@ -28,16 +46,17 @@ const Dashboard = () => {
   }, [user]);
 
   if (!user) return <div className="text-center mt-10">Loading user...</div>;
-  if (loading) return <div className="text-center mt-10">Loading roadmaps...</div>;
+  if (loading || !progressLoaded)
+    return <div className="text-center mt-10">Loading roadmaps...</div>;
 
   return (
     <div className="max-w-4xl mx-auto p-6">
       <h1 className="text-2xl font-bold mb-6">Explore Career Roadmaps</h1>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         {roadmaps.map((roadmap) => {
-          const progress = progressMap[roadmap._id] || { completed: 0, total: 0 };
+          const progress = progressMap[roadmap._id] || { completed: 0, total: 1 };
           const { completed, total } = progress;
-          const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+          const percentage = Math.round((completed / total) * 100);
 
           return (
             <div

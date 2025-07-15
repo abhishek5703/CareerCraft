@@ -1,64 +1,32 @@
 import express from "express";
-import QuizQuestion from "../models/QuizQuestion.js";
-import QuizResult from "../models/QuizResult.js";
+import {
+  getQuizQuestions,
+  submitQuizResult,
+  getUserQuizResults,
+  submitQuiz,
+  getQuizAttempts,
+  getUserRoadmapAttempts,
+} from "../controllers/quizController.js";
 import { requireAuth } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-// ✅ Get quiz questions for a roadmap
-router.get("/:roadmapId", requireAuth, async (req, res) => {
-  try {
-    const questions = await QuizQuestion.find({ roadmapId: req.params.roadmapId });
+// ✅ Place this route ABOVE ":roadmapId"
+router.get("/:roadmapId/attempts", requireAuth, getQuizAttempts);
 
-    if (!questions.length) {
-      return res.status(404).json({ error: "No quiz found for this roadmap" });
-    }
+// ✅ Get quiz questions
+router.get("/:roadmapId", requireAuth, getQuizQuestions);
 
-    res.json(questions);
-  } catch (err) {
-    console.error("Error loading questions:", err);
-    res.status(500).json({ error: "Failed to load questions" });
-  }
-});
+// Save result with section breakdown
+router.post("/save-result", requireAuth, submitQuizResult);
 
-// ✅ Submit quiz result (with section scores)
-router.post("/submit", requireAuth, async (req, res) => {
-  try {
-    const { userId, roadmapId, score, total, sectionScores } = req.body;
+// All results for a user
+router.get("/results/:userId", requireAuth, getUserQuizResults);
 
-    if (!userId || !roadmapId || typeof score !== "number" || typeof total !== "number") {
-      return res.status(400).json({ error: "Missing required fields" });
-    }
+// Submit a quiz attempt
+router.post("/submit", requireAuth, submitQuiz);
 
-    const result = new QuizResult({
-      userId,
-      roadmapId,
-      score,
-      total,
-      sectionScores,
-    });
-
-    await result.save();
-
-    res.status(200).json({ message: "Result saved successfully" });
-  } catch (err) {
-    console.error("Error saving result:", err);
-    res.status(500).json({ error: "Failed to save result" });
-  }
-});
-
-// ✅ Get all quiz results for a user
-router.get("/results/:userId", requireAuth, async (req, res) => {
-  try {
-    const results = await QuizResult.find({ userId: req.params.userId })
-      .populate("roadmapId", "title")
-      .sort({ createdAt: -1 });
-
-    res.json(results);
-  } catch (err) {
-    console.error("Error fetching results:", err);
-    res.status(500).json({ error: "Failed to fetch results" });
-  }
-});
+// All roadmaps with attempts for this user
+router.get("/user/:userId/roadmaps", requireAuth, getUserRoadmapAttempts);
 
 export default router;

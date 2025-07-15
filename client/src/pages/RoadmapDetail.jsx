@@ -168,14 +168,21 @@ const RoadmapDetail = () => {
         <div className="mt-8 p-6 border border-green-300 bg-green-50 rounded">
           <h2 className="text-xl font-bold text-green-700">🎉 You’ve completed this roadmap!</h2>
           <p className="text-gray-700 mt-2">Ready to take the next step?</p>
-          <div className="mt-4">
+          <div className="mt-4 flex gap-4">
             <button
               onClick={() => navigate(`/quiz/${roadmapId}/instructions`)}
               className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded"
             >
               Take Quiz
             </button>
+            <button
+              onClick={() => navigate(`/quiz/${roadmapId}/attempts`)}
+              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
+            >
+              View Past Attempts
+            </button>
           </div>
+
         </div>
       )}
 
