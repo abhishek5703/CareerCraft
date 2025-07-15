@@ -6,7 +6,7 @@ export const getAllRoadmaps = async (req, res) => {
     const roadmaps = await Roadmap.find({}, "title category image ");
     res.json(roadmaps);
   } catch (error) {
-    console.error("🔥 Error in getAllRoadmaps:", error.message);
+    console.error(" Error in getAllRoadmaps:", error.message);
     res.status(500).json({ message: "Failed to fetch roadmaps" });
   }
 };
