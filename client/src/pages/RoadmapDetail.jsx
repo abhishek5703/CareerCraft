@@ -131,9 +131,8 @@ const RoadmapDetail = () => {
                   return (
                     <div
                       key={i}
-                      className={`p-4 border rounded flex items-center justify-between ${
-                        isDone ? "bg-green-50 border-green-400" : "bg-white"
-                      }`}
+                      className={`p-4 border rounded flex items-center justify-between ${isDone ? "bg-green-50 border-green-400" : "bg-white"
+                        }`}
                     >
                       <div className="flex items-start gap-3 w-full">
                         <input
@@ -171,7 +170,7 @@ const RoadmapDetail = () => {
           <p className="text-gray-700 mt-2">Ready to take the next step?</p>
           <div className="mt-4">
             <button
-              onClick={() => navigate(`/quiz/${roadmapId}`)}
+              onClick={() => navigate(`/quiz/${roadmapId}/instructions`)}
               className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded"
             >
               Take Quiz
@@ -179,6 +178,7 @@ const RoadmapDetail = () => {
           </div>
         </div>
       )}
+
     </div>
   );
 };

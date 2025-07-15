@@ -9,6 +9,7 @@ import QuizResults from "./pages/QuizResults";
 import Navbar from "./components/Navbar"; // ✅ Import Navbar
 import Home from "./pages/Home"; // Optional: If you add a Home page
 import Profile from "./pages/Profile";
+import QuizInstructions from "./pages/QuizInstructions"; // ✅ Import it
 
 function App() {
   return (
@@ -44,6 +45,15 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/quiz/:roadmapId/instructions"
+          element={
+            <ProtectedRoute>
+              <QuizInstructions />
+            </ProtectedRoute>
+          }
+        />
+
         <Route
           path="/quiz/results"
           element={
