@@ -40,10 +40,9 @@ const Navbar = () => {
   const isActive = (path) => location.pathname === path;
 
   const navLinkClass = (path) =>
-    `block px-3 py-2 rounded-md text-sm font-medium transition duration-200 ${
-      isActive(path)
-        ? "text-blue-600 font-semibold underline"
-        : "text-gray-700 hover:text-blue-600"
+    `block px-3 py-2 rounded-md text-sm font-medium transition duration-200 ${isActive(path)
+      ? "text-blue-600 font-semibold underline"
+      : "text-gray-700 hover:text-blue-600"
     }`;
 
   const toggleMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -101,9 +100,8 @@ const Navbar = () => {
     return filteredRoadmaps.map((roadmap, index) => (
       <li
         key={roadmap._id}
-        className={`flex items-center gap-2 px-4 py-2 cursor-pointer ${
-          index === highlightedIndex ? "bg-blue-100" : "hover:bg-blue-50"
-        }`}
+        className={`flex items-center gap-2 px-4 py-2 cursor-pointer ${index === highlightedIndex ? "bg-blue-100" : "hover:bg-blue-50"
+          }`}
         onMouseEnter={() => setHighlightedIndex(index)}
         onClick={() => {
           navigate(`/roadmap/${roadmap._id}`);
@@ -127,9 +125,14 @@ const Navbar = () => {
       <nav className="bg-white shadow-md sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
-            <Link to="/" className="text-2xl font-bold text-blue-600">
-              CareerCraft
+            <Link to="/" className="flex items-center gap-2">
+              <img
+                src="/logo.png"
+                alt="CareerCraft Logo"
+                className="h-12.5 w-auto object-contain"
+              />
             </Link>
+
 
             {/* Desktop search */}
             <div className="relative hidden md:block w-96">
