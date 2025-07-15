@@ -11,6 +11,7 @@ import Home from "./pages/Home"; // Optional: If you add a Home page
 import Profile from "./pages/Profile";
 import QuizInstructions from "./pages/QuizInstructions"; // ✅ Import it
 import QuizAttempts from "./pages/QuizAttempts"; // ✅ Import this
+import Footer from "./components/Footer";
 
 function App() {
   return (
@@ -80,6 +81,7 @@ function App() {
           }
         />
       </Routes>
+      <Footer />
     </BrowserRouter>
   );
 }
