@@ -19,7 +19,7 @@ const Login = () => {
     try {
       const res = await axios.post("http://localhost:5000/api/auth/login", form);
       login(res.data.token, res.data.user); // <-- fixed
-      navigate("/dashboard");
+      navigate("/");
     } catch (err) {
       const errorMessage = err.response?.data?.error || err.response?.data?.message || err.message;
       alert("Login failed: " + errorMessage);
