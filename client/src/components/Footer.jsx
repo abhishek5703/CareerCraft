@@ -3,12 +3,11 @@ import { FaLinkedin, FaGithub, FaEnvelope } from "react-icons/fa";
 
 const Footer = () => {
   return (
-    <footer className="backdrop-blur-sm bg-gray-100/60 border-t border-gray-200 shadow-md px-6 py-16 mt-28">
+    <footer className="bg-gray-100 border-t border-gray-200 shadow-inner px-6 py-16 mt-28">
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
-
         {/* Branding */}
         <div className="space-y-3 md:col-span-1">
-          <h2 className="text-3xl font-bold text-gray-800 flex items-center gap-2">
+          <h2 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
             CareerCraft <span className="text-xl">🚀</span>
           </h2>
           <p className="text-sm text-gray-600 leading-relaxed">
@@ -18,7 +17,9 @@ const Footer = () => {
 
         {/* Explore */}
         <div>
-          <h3 className="text-lg font-semibold text-gray-800 mb-4 border-b border-blue-400 inline-block pb-1">Explore</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4 border-b border-blue-500 inline-block pb-1">
+            Explore
+          </h3>
           <ul className="space-y-2 text-sm text-gray-700">
             <li><Link to="/" className="hover:text-blue-600 transition">Home</Link></li>
             <li><Link to="/dashboard" className="hover:text-blue-600 transition">Dashboard</Link></li>
@@ -30,23 +31,27 @@ const Footer = () => {
 
         {/* Connect */}
         <div>
-          <h3 className="text-lg font-semibold text-gray-800 mb-4 border-b border-blue-400 inline-block pb-1">Connect</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4 border-b border-blue-500 inline-block pb-1">
+            Connect
+          </h3>
           <div className="flex gap-5 mt-3 text-2xl text-gray-600">
-            <Link to="/" className="hover:text-blue-600 hover:scale-110 transition duration-300" title="LinkedIn">
+            <a href="https://linkedin.com" target="_blank" rel="noreferrer" className="hover:text-blue-600 hover:scale-110 transition duration-300" title="LinkedIn">
               <FaLinkedin />
-            </Link>
-            <Link to="/" className="hover:text-gray-900 hover:scale-110 transition duration-300" title="GitHub">
+            </a>
+            <a href="https://github.com" target="_blank" rel="noreferrer" className="hover:text-gray-900 hover:scale-110 transition duration-300" title="GitHub">
               <FaGithub />
-            </Link>
-            <Link to="/" className="hover:text-pink-500 hover:scale-110 transition duration-300" title="Email">
+            </a>
+            <a href="mailto:hello@careercraft.com" className="hover:text-pink-500 hover:scale-110 transition duration-300" title="Email">
               <FaEnvelope />
-            </Link>
+            </a>
           </div>
         </div>
 
         {/* Newsletter */}
         <div>
-          <h3 className="text-lg font-semibold text-gray-800 mb-4 border-b border-blue-400 inline-block pb-1">Subscribe</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4 border-b border-blue-500 inline-block pb-1 ">
+            Subscribe
+          </h3>
           <p className="text-sm text-gray-600 mb-3">
             Join our newsletter to stay updated on the latest roadmaps and career tips.
           </p>
@@ -59,7 +64,7 @@ const Footer = () => {
             />
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700 transition w-full sm:w-auto"
+              className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700 transition w-full sm:w-auto cursor-pointer"
             >
               Subscribe
             </button>

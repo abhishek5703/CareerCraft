@@ -56,7 +56,7 @@ const Dashboard = () => {
     return <div className="text-center mt-10 text-gray-600">Loading roadmaps...</div>;
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-12">
+    <div className="max-w-7xl mx-auto px-6 py-12 min-h-[85vh]">
       {/* Animated Heading */}
       <motion.h1
         initial={{ opacity: 0, y: -20 }}
@@ -70,7 +70,7 @@ const Dashboard = () => {
         Choose your path and track your progress with structured step-by-step roadmaps designed for future-ready careers.
       </p>
 
-      {/* Cards */}
+      {/* Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
         {roadmaps.map((roadmap, index) => {
           const progress = progressMap[roadmap._id] || { completed: 0, total: 1 };
@@ -81,7 +81,7 @@ const Dashboard = () => {
           return (
             <motion.div
               key={roadmap._id}
-              className="bg-white/80 backdrop-blur-md border border-gray-200 rounded-2xl shadow-lg hover:shadow-xl hover:scale-[1.03] transition-all duration-300 flex flex-col overflow-hidden"
+              className="bg-white/80 border border-gray-200 rounded-2xl shadow-lg hover:shadow-2xl hover:scale-[1.03] transition-all duration-300 flex flex-col overflow-hidden"
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true, amount: 0.2 }}
@@ -89,39 +89,42 @@ const Dashboard = () => {
               custom={index}
             >
               {/* Image */}
-              <img
-                src={imageUrl}
-                alt={roadmap.title}
-                className="h-44 w-full object-cover rounded-t-2xl"
-              />
+              <div className="relative">
+                <img
+                  src={imageUrl}
+                  alt={roadmap.title}
+                  className="h-44 w-full object-cover rounded-t-2xl"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent rounded-t-2xl" />
+              </div>
 
               {/* Body */}
               <div className="p-5 flex flex-col justify-between h-full">
                 <Link to={`/roadmap/${roadmap._id}`}>
-                  <h2 className="text-xl font-semibold text-blue-600 hover:underline tracking-tight">
+                  <h2 className="text-xl font-semibold text-blue-700 hover:underline tracking-tight mb-1">
                     {roadmap.title}
                   </h2>
                 </Link>
 
-                <p className="text-gray-600 mt-2 text-sm line-clamp-3">{roadmap.description}</p>
+                <p className="text-gray-600 text-sm line-clamp-3">{roadmap.description}</p>
 
-                {/* Progress Bar */}
+                {/* Progress */}
                 <div className="mt-4">
-                  <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                  <div className="w-full bg-gray-200 h-3 rounded-full overflow-hidden shadow-inner">
                     <div
-                      className="bg-gradient-to-r from-green-400 to-blue-500 h-3 rounded-full transition-all duration-500"
+                      className="bg-gradient-to-r from-green-400 to-blue-500 h-full rounded-full transition-all duration-500"
                       style={{ width: `${percentage}%` }}
-                    ></div>
+                    />
                   </div>
                   <p className="text-xs text-gray-500 mt-1">
                     {completed} of {total} steps completed ({percentage}%)
                   </p>
                 </div>
 
-                {/* CTA */}
+                {/* CTA Button */}
                 <Link
                   to={`/roadmap/${roadmap._id}`}
-                  className="mt-5 inline-block text-center bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition font-medium text-sm"
+                  className="mt-5 inline-block text-center bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition font-medium text-sm shadow-md"
                 >
                   View Roadmap
                 </Link>

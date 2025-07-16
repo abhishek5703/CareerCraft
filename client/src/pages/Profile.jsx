@@ -7,7 +7,6 @@ const Profile = () => {
   if (!user)
     return <div className="text-center mt-20 text-gray-600 text-lg">Loading profile...</div>;
 
-  // Utility for initials avatar
   const getInitials = (name) => {
     return name
       ?.split(" ")
@@ -17,26 +16,32 @@ const Profile = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-white px-4">
-      <div className="w-full max-w-md bg-white/60 backdrop-blur-md border border-gray-200 shadow-xl rounded-2xl p-8 text-gray-800">
+    <div className="min-h-[85vh] flex items-center justify-center px-4 py-12 sm:py-16 bg-gradient-to-br from-white to-blue-50">
+      <div className="w-full max-w-md sm:max-w-lg bg-white/80 backdrop-blur-lg border border-gray-200 shadow-xl rounded-2xl p-6 sm:p-8 text-gray-800">
         <div className="flex flex-col items-center">
           {/* Avatar */}
-          <div className="w-20 h-20 rounded-full bg-blue-600 text-white flex items-center justify-center text-3xl font-bold mb-4 shadow-md">
-            {getInitials(user.name)}
+          <div className="mb-4">
+            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-blue-600 text-white flex items-center justify-center text-3xl sm:text-4xl font-bold shadow ring-4 ring-blue-300">
+              {getInitials(user.name)}
+            </div>
           </div>
 
-          <h2 className="text-2xl font-extrabold text-blue-700 mb-1">{user.name}</h2>
-          <p className="text-gray-600 text-sm mb-6">Your personalized CareerCraft profile</p>
+          {/* User Name */}
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-blue-700 mb-1 text-center">{user.name}</h2>
+          <p className="text-sm text-gray-500 mb-6 text-center">
+            Welcome to your CareerCraft profile
+          </p>
 
+          {/* Info Cards */}
           <div className="w-full space-y-4">
-            <div className="flex items-center gap-3 bg-white border border-gray-200 rounded-lg px-4 py-3 shadow-sm">
-              <FaUserCircle className="text-blue-500 text-xl" />
-              <span className="text-gray-700 font-medium">{user.name}</span>
+            <div className="flex items-center gap-3 bg-white border border-gray-200 rounded-lg px-4 py-3 shadow-sm hover:shadow transition">
+              <FaUserCircle className="text-indigo-600 text-xl" />
+              <span className="text-gray-800 font-medium break-all">{user.name}</span>
             </div>
 
-            <div className="flex items-center gap-3 bg-white border border-gray-200 rounded-lg px-4 py-3 shadow-sm">
-              <FaEnvelope className="text-blue-500 text-xl" />
-              <span className="text-gray-700 font-medium">{user.email}</span>
+            <div className="flex items-center gap-3 bg-white border border-gray-200 rounded-lg px-4 py-3 shadow-sm hover:shadow transition">
+              <FaEnvelope className="text-indigo-600 text-xl" />
+              <span className="text-gray-800 font-medium break-all">{user.email}</span>
             </div>
           </div>
         </div>

@@ -1,3 +1,4 @@
+// Your imports remain the same
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
@@ -29,7 +30,7 @@ const animatedPlaceholders = [
 
 const Navbar = () => {
   const { user, logout } = useAuth();
-  const { roadmaps, loading } = useRoadmaps();
+  const { roadmaps } = useRoadmaps();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -46,17 +47,18 @@ const Navbar = () => {
   const inputRef = useRef(null);
 
   const isActive = (path) => location.pathname === path;
-
-  const navLinkClass = (path) =>
-    `text-sm font-semibold px-4 py-2 rounded-md transition-all duration-200 ${isActive(path) ? "text-blue-600 bg-blue-100" : "text-gray-700 hover:bg-gray-100"
-    }`;
-
+  const toggleMenu = () => setIsMobileMenuOpen((prev) => !prev);
   const handleLogout = () => {
     logout();
     navigate("/login");
   };
 
-  const toggleMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
+  const navLinkClass = (path) =>
+    `text-sm font-semibold px-4 py-2 rounded-lg transition-all duration-200 ${
+      isActive(path)
+        ? "bg-blue-100 text-blue-700"
+        : "text-gray-700 hover:bg-gray-100 hover:text-blue-600"
+    }`;
 
   useEffect(() => {
     typingInterval.current = setInterval(() => {
@@ -69,7 +71,8 @@ const Navbar = () => {
         setTypedPlaceholder((prev) => prev.slice(0, -1));
         if (typedPlaceholder.length === 0) {
           direction.current = "forward";
-          placeholderIndex.current = (placeholderIndex.current + 1) % animatedPlaceholders.length;
+          placeholderIndex.current =
+            (placeholderIndex.current + 1) % animatedPlaceholders.length;
           charIndex.current = 0;
         }
       }
@@ -105,7 +108,9 @@ const Navbar = () => {
     if (e.key === "ArrowDown") {
       setHighlightedIndex((prev) => (prev + 1) % filteredRoadmaps.length);
     } else if (e.key === "ArrowUp") {
-      setHighlightedIndex((prev) => (prev === 0 ? filteredRoadmaps.length - 1 : prev - 1));
+      setHighlightedIndex((prev) =>
+        prev === 0 ? filteredRoadmaps.length - 1 : prev - 1
+      );
     } else if (e.key === "Enter" && filteredRoadmaps[highlightedIndex]) {
       navigate(`/roadmap/${filteredRoadmaps[highlightedIndex]._id}`);
       resetSearch();
@@ -135,7 +140,7 @@ const Navbar = () => {
         onKeyDown={handleKeyDown}
       />
       {filteredRoadmaps.length > 0 && (
-        <ul className="absolute top-full left-0 w-full bg-white shadow-2xl border mt-2 rounded-xl z-50 max-h-72 overflow-y-auto">
+        <ul className="absolute top-full left-0 w-full bg-white shadow-xl border mt-2 rounded-xl z-50 max-h-72 overflow-y-auto">
           {filteredRoadmaps.map((roadmap, i) => (
             <li
               key={roadmap._id}
@@ -143,8 +148,11 @@ const Navbar = () => {
                 navigate(`/roadmap/${roadmap._id}`);
                 resetSearch();
               }}
-              className={`flex items-center gap-3 px-4 py-2 cursor-pointer transition-all ${highlightedIndex === i ? "bg-blue-100" : "hover:bg-blue-50"
-                }`}
+              className={`flex items-center gap-3 px-4 py-2 cursor-pointer transition-all ${
+                highlightedIndex === i
+                  ? "bg-blue-100"
+                  : "hover:bg-blue-50"
+              }`}
               onMouseEnter={() => setHighlightedIndex(i)}
             >
               <img
@@ -162,13 +170,15 @@ const Navbar = () => {
 
   return (
     <>
-      <nav className="bg-white/70 backdrop-blur-md shadow-md sticky top-0 z-50 border-b border-gray-200 rounded-b-xl">
+      <nav className="bg-white/80 backdrop-blur-lg shadow-md sticky top-0 z-50 border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             <Link to="/" className="flex items-center gap-2">
-              <img src="/logo.png" alt="CareerCraft" className="h-12 w-auto" />
+              <img src="/logo.png" alt="CareerCraft" className="h-10 w-auto" />
             </Link>
-            <div className="hidden md:flex flex-1 justify-center">{renderSearchInput()}</div>
+            <div className="hidden md:flex flex-1 justify-center">
+              {renderSearchInput()}
+            </div>
             <div className="hidden md:flex items-center gap-4">
               <Link to="/" className={navLinkClass("/")}>Home</Link>
               <Link to="/dashboard" className={navLinkClass("/dashboard")}>Explore</Link>
@@ -177,7 +187,7 @@ const Navbar = () => {
                   <Link to="/profile" className={navLinkClass("/profile")}>Profile</Link>
                   <button
                     onClick={handleLogout}
-                    className="text-red-600 hover:text-red-800 text-sm font-semibold"
+                    className="text-sm font-semibold text-red-600 hover:text-red-800 cursor-pointer"
                   >
                     Logout
                   </button>
@@ -218,7 +228,7 @@ const Navbar = () => {
                     handleLogout();
                     toggleMenu();
                   }}
-                  className="block w-full text-left px-4 py-2 rounded-md text-sm font-medium text-red-600 hover:bg-red-50 transition"
+                  className="block w-full text-left px-4 py-2 rounded-md text-sm font-medium text-red-600 hover:bg-red-50 transition cursor-pointer"
                 >
                   Logout
                 </Link>

@@ -1,23 +1,21 @@
+// src/App.jsx
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { Toaster } from "react-hot-toast"; // ✅ Import this
+import { Toaster } from "react-hot-toast";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import RoadmapDetail from "./pages/RoadmapDetail";
 import Quiz from "./pages/Quiz";
-import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
 import Profile from "./pages/Profile";
 import QuizInstructions from "./pages/QuizInstructions";
 import QuizAttempts from "./pages/QuizAttempts";
-import Footer from "./components/Footer";
+import Layout from "./components/Layout";
 
 function App() {
   return (
     <BrowserRouter>
-      <Navbar />
-      
       {/* ✅ GLOBAL TOASTER */}
       <Toaster
         position="top-center"
@@ -31,13 +29,13 @@ function App() {
           },
           success: {
             iconTheme: {
-              primary: "#10b981", // green-500
+              primary: "#10b981",
               secondary: "#ecfdf5",
             },
           },
           error: {
             iconTheme: {
-              primary: "#ef4444", // red-500
+              primary: "#ef4444",
               secondary: "#fef2f2",
             },
           },
@@ -45,61 +43,61 @@ function App() {
       />
 
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-        
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/roadmap/:roadmapId"
-          element={
-            <ProtectedRoute>
-              <RoadmapDetail />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/quiz/:roadmapId"
-          element={
-            <ProtectedRoute>
-              <Quiz />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/quiz/:roadmapId/instructions"
-          element={
-            <ProtectedRoute>
-              <QuizInstructions />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/profile"
-          element={
-            <ProtectedRoute>
-              <Profile />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/quiz/:roadmapId/attempts"
-          element={
-            <ProtectedRoute>
-              <QuizAttempts />
-            </ProtectedRoute>
-          }
-        />
+        {/* All pages wrapped in Layout */}
+        <Route path="/" element={<Layout />}>
+          <Route index element={<Home />} />
+          <Route path="login" element={<Login />} />
+          <Route path="signup" element={<Signup />} />
+          <Route
+            path="dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="roadmap/:roadmapId"
+            element={
+              <ProtectedRoute>
+                <RoadmapDetail />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="quiz/:roadmapId"
+            element={
+              <ProtectedRoute>
+                <Quiz />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="quiz/:roadmapId/instructions"
+            element={
+              <ProtectedRoute>
+                <QuizInstructions />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="quiz/:roadmapId/attempts"
+            element={
+              <ProtectedRoute>
+                <QuizAttempts />
+              </ProtectedRoute>
+            }
+          />
+        </Route>
       </Routes>
-      
-      <Footer />
     </BrowserRouter>
   );
 }
