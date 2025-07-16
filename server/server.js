@@ -11,7 +11,13 @@ import quizRoutes from "./routes/quizRoutes.js";
 dotenv.config();
 
 const app = express();
-app.use(cors());
+app.use(
+  cors({
+    origin: ["http://localhost:5173", "https://career-craft-zwhr.vercel.app"],
+    credentials: true,
+  })
+);
+
 app.use(express.json());
 
 // API Routes
