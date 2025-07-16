@@ -6,7 +6,6 @@ import Dashboard from "./pages/Dashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import RoadmapDetail from "./pages/RoadmapDetail";
 import Quiz from "./pages/Quiz";
-import QuizResults from "./pages/QuizResults";
 import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
 import Profile from "./pages/Profile";
@@ -79,14 +78,6 @@ function App() {
           element={
             <ProtectedRoute>
               <QuizInstructions />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/quiz/results"
-          element={
-            <ProtectedRoute>
-              <QuizResults />
             </ProtectedRoute>
           }
         />
