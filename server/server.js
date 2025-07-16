@@ -20,6 +20,10 @@ app.use(
 
 app.use(express.json());
 
+app.get("/", (req, res) => {
+  res.send("CareerCraft Backend is running ");
+});
+
 // API Routes
 app.use("/api/roadmaps", roadmapRoutes);
 
