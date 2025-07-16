@@ -18,12 +18,6 @@ const cardVariants = {
   }),
 };
 
-const getStatusColor = (percentage) => {
-  if (percentage >= 75) return "bg-green-500";
-  if (percentage >= 40) return "bg-yellow-400";
-  return "bg-red-400";
-};
-
 const Dashboard = () => {
   const [roadmaps, setRoadmaps] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -62,33 +56,32 @@ const Dashboard = () => {
     return <div className="text-center mt-10 text-gray-600">Loading roadmaps...</div>;
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-14">
-      {/* Header */}
+    <div className="max-w-7xl mx-auto px-6 py-12">
+      {/* Animated Heading */}
       <motion.h1
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="text-4xl sm:text-5xl font-extrabold text-center text-transparent bg-clip-text bg-gradient-to-r from-blue-700 via-purple-600 to-indigo-600 mb-4"
+        transition={{ duration: 0.7 }}
+        className="text-center text-4xl sm:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-500 to-indigo-600 mb-3"
       >
-        Your Career Toolkit
+        Explore Career Roadmaps
       </motion.h1>
-      <p className="text-center text-gray-600 max-w-xl mx-auto text-lg mb-12">
-        Select a roadmap to begin your journey — track your growth, learn continuously, and build a standout career.
+      <p className="text-center text-gray-600 mb-10 max-w-2xl mx-auto text-lg">
+        Choose your path and track your progress with structured step-by-step roadmaps designed for future-ready careers.
       </p>
 
-      {/* Roadmap Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
+      {/* Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
         {roadmaps.map((roadmap, index) => {
           const progress = progressMap[roadmap._id] || { completed: 0, total: 1 };
           const { completed, total } = progress;
           const percentage = Math.round((completed / total) * 100);
           const imageUrl = roadmap.image ? `/${roadmap.image}` : "/default.jpg";
-          const statusColor = getStatusColor(percentage);
 
           return (
             <motion.div
               key={roadmap._id}
-              className="bg-white/90 backdrop-blur-lg border border-gray-200 rounded-2xl shadow-md hover:shadow-xl hover:-translate-y-2 transition-all duration-300 overflow-hidden group"
+              className="bg-white/80 backdrop-blur-md border border-gray-200 rounded-2xl shadow-lg hover:shadow-xl hover:scale-[1.03] transition-all duration-300 flex flex-col overflow-hidden"
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true, amount: 0.2 }}
@@ -99,31 +92,26 @@ const Dashboard = () => {
               <img
                 src={imageUrl}
                 alt={roadmap.title}
-                className="w-full h-44 object-cover group-hover:scale-105 transition-transform duration-500"
+                className="h-44 w-full object-cover rounded-t-2xl"
               />
 
-              {/* Content */}
-              <div className="p-5 flex flex-col gap-3">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-bold text-blue-700 group-hover:underline">
+              {/* Body */}
+              <div className="p-5 flex flex-col justify-between h-full">
+                <Link to={`/roadmap/${roadmap._id}`}>
+                  <h2 className="text-xl font-semibold text-blue-600 hover:underline tracking-tight">
                     {roadmap.title}
                   </h2>
-                  <span className="text-xs bg-blue-100 text-blue-600 font-medium px-2 py-0.5 rounded-full shadow-sm">
-                    {roadmap.category}
-                  </span>
-                </div>
+                </Link>
 
-                <p className="text-sm text-gray-600 line-clamp-3">
-                  {roadmap.description}
-                </p>
+                <p className="text-gray-600 mt-2 text-sm line-clamp-3">{roadmap.description}</p>
 
                 {/* Progress Bar */}
-                <div>
-                  <div className="w-full h-3 bg-gray-200 rounded-full">
+                <div className="mt-4">
+                  <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
                     <div
-                      className={`${statusColor} h-3 rounded-full transition-all duration-500`}
+                      className="bg-gradient-to-r from-green-400 to-blue-500 h-3 rounded-full transition-all duration-500"
                       style={{ width: `${percentage}%` }}
-                    />
+                    ></div>
                   </div>
                   <p className="text-xs text-gray-500 mt-1">
                     {completed} of {total} steps completed ({percentage}%)
@@ -133,7 +121,7 @@ const Dashboard = () => {
                 {/* CTA */}
                 <Link
                   to={`/roadmap/${roadmap._id}`}
-                  className="mt-2 inline-block text-center bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-md hover:bg-blue-700 transition"
+                  className="mt-5 inline-block text-center bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition font-medium text-sm"
                 >
                   View Roadmap
                 </Link>
