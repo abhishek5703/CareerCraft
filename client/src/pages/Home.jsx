@@ -6,17 +6,13 @@ const Home = () => {
   const { token } = useAuth();
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-blue-50 to-white px-6 md:px-16 py-16 flex flex-col-reverse md:flex-row items-center justify-between">
-      {/* Decorative Background Circles */}
-      <div className="absolute -top-20 -left-20 w-60 h-60 bg-blue-100 rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-pulse" />
-      <div className="absolute -bottom-20 -right-20 w-72 h-72 bg-purple-100 rounded-full mix-blend-multiply filter blur-3xl opacity-40 animate-pulse" />
-
+    <div className="min-h-[80vh] bg-gradient-to-br from-blue-50 to-white px-6 md:px-16 py-16 flex flex-col md:flex-row items-center justify-between gap-8">
       {/* Text Section */}
       <motion.div
         initial={{ opacity: 0, x: -50 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.7 }}
-        className="z-10 max-w-xl text-center md:text-left"
+        className="max-w-xl text-center md:text-left"
       >
         <h1 className="text-4xl md:text-5xl font-extrabold text-blue-700 leading-tight mb-4">
           <motion.span
@@ -49,12 +45,12 @@ const Home = () => {
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ delay: 0.3, duration: 0.6 }}
         whileHover={{ y: -5 }}
-        className="z-10 w-full max-w-sm mb-12 md:mb-0"
+        className="w-full max-w-md md:max-w-sm"
       >
         <img
           src="/hero-illustration.png"
           alt="Career growth"
-          className="w-full h-auto drop-shadow-xl"
+          className="w-full h-auto drop-shadow-xl object-contain"
         />
       </motion.div>
     </div>

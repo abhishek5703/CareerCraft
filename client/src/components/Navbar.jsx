@@ -38,38 +38,34 @@ const Navbar = () => {
   const [filteredRoadmaps, setFilteredRoadmaps] = useState([]);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const [typedPlaceholder, setTypedPlaceholder] = useState("");
+
   const placeholderIndex = useRef(0);
   const charIndex = useRef(0);
   const direction = useRef("forward");
   const typingInterval = useRef(null);
-  const searchTimeout = useRef(null);
   const inputRef = useRef(null);
+
+  const isActive = (path) => location.pathname === path;
+
+  const navLinkClass = (path) =>
+    `text-sm font-semibold px-4 py-2 rounded-md transition-all duration-200 ${
+      isActive(path) ? "text-blue-600 bg-blue-100" : "text-gray-700 hover:bg-gray-100"
+    }`;
 
   const handleLogout = () => {
     logout();
     navigate("/login");
   };
 
-  const isActive = (path) => location.pathname === path;
-
-  const navLinkClass = (path) =>
-    `block w-full text-left px-4 py-2 rounded-md text-sm font-medium transition duration-200 ${
-      isActive(path)
-        ? "text-blue-600 font-semibold bg-blue-100"
-        : "text-gray-700 hover:bg-gray-100"
-    }`;
-
   const toggleMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
 
   useEffect(() => {
     typingInterval.current = setInterval(() => {
-      const currentText = animatedPlaceholders[placeholderIndex.current];
+      const text = animatedPlaceholders[placeholderIndex.current];
       if (direction.current === "forward") {
-        setTypedPlaceholder((prev) => prev + currentText.charAt(charIndex.current));
+        setTypedPlaceholder((prev) => prev + text.charAt(charIndex.current));
         charIndex.current++;
-        if (charIndex.current === currentText.length) {
-          direction.current = "backward";
-        }
+        if (charIndex.current === text.length) direction.current = "backward";
       } else {
         setTypedPlaceholder((prev) => prev.slice(0, -1));
         if (typedPlaceholder.length === 0) {
@@ -78,25 +74,22 @@ const Navbar = () => {
           charIndex.current = 0;
         }
       }
-    }, 15);
+    }, 45);
     return () => clearInterval(typingInterval.current);
   }, [typedPlaceholder]);
 
   useEffect(() => {
-    if (searchTimeout.current) clearTimeout(searchTimeout.current);
-    searchTimeout.current = setTimeout(() => {
-      if (searchTerm.trim() === "") {
-        setFilteredRoadmaps([]);
-        setHighlightedIndex(-1);
-      } else {
-        const results = roadmaps.filter((r) =>
-          r.title.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-        setFilteredRoadmaps(results);
-        setHighlightedIndex(0);
-      }
-    }, 300);
-    return () => clearTimeout(searchTimeout.current);
+    if (!searchTerm.trim()) return setFilteredRoadmaps([]);
+
+    const timeout = setTimeout(() => {
+      const results = roadmaps.filter((r) =>
+        r.title.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredRoadmaps(results);
+      setHighlightedIndex(0);
+    }, 200);
+
+    return () => clearTimeout(timeout);
   }, [searchTerm, roadmaps]);
 
   useEffect(() => {
@@ -110,90 +103,75 @@ const Navbar = () => {
   }, []);
 
   const handleKeyDown = (e) => {
-    if (filteredRoadmaps.length === 0) return;
     if (e.key === "ArrowDown") {
-      e.preventDefault();
-      setHighlightedIndex((prev) => (prev < filteredRoadmaps.length - 1 ? prev + 1 : 0));
+      setHighlightedIndex((prev) => (prev + 1) % filteredRoadmaps.length);
     } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      setHighlightedIndex((prev) => (prev > 0 ? prev - 1 : filteredRoadmaps.length - 1));
-    } else if (e.key === "Enter" && highlightedIndex !== -1) {
-      const selected = filteredRoadmaps[highlightedIndex];
-      navigate(`/roadmap/${selected._id}`);
-      setSearchTerm("");
-      setFilteredRoadmaps([]);
-      setIsMobileMenuOpen(false);
+      setHighlightedIndex((prev) => (prev === 0 ? filteredRoadmaps.length - 1 : prev - 1));
+    } else if (e.key === "Enter" && filteredRoadmaps[highlightedIndex]) {
+      navigate(`/roadmap/${filteredRoadmaps[highlightedIndex]._id}`);
+      resetSearch();
     } else if (e.key === "Escape") {
       setFilteredRoadmaps([]);
     }
   };
 
+  const resetSearch = () => {
+    setSearchTerm("");
+    setFilteredRoadmaps([]);
+    setIsMobileMenuOpen(false);
+  };
+
   const renderSearchInput = () => (
     <div
       ref={inputRef}
-      className="relative flex items-center bg-gray-100 rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-blue-400 focus-within:bg-white transition w-full md:w-[32rem]"
+      className="relative flex items-center bg-gray-100 rounded-xl px-4 py-2 shadow-inner transition w-full md:w-[30rem] focus-within:ring-2 focus-within:ring-blue-500"
     >
       <Search className="text-gray-500 mr-2" size={18} />
       <input
         type="text"
         placeholder={typedPlaceholder}
-        className="bg-transparent w-full outline-none"
+        className="bg-transparent w-full text-sm outline-none placeholder-gray-500"
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
         onKeyDown={handleKeyDown}
       />
-      {(filteredRoadmaps.length > 0 || loading || searchTerm.trim()) && (
-        <ul className="absolute bg-white border mt-1 rounded-md w-full max-h-64 overflow-y-auto z-50 shadow-lg left-0 top-full">
-          {renderSearchDropdown()}
+      {filteredRoadmaps.length > 0 && (
+        <ul className="absolute top-full left-0 w-full bg-white shadow-2xl border mt-2 rounded-xl z-50 max-h-72 overflow-y-auto">
+          {filteredRoadmaps.map((roadmap, i) => (
+            <li
+              key={roadmap._id}
+              onClick={() => {
+                navigate(`/roadmap/${roadmap._id}`);
+                resetSearch();
+              }}
+              className={`flex items-center gap-3 px-4 py-2 cursor-pointer transition-all ${
+                highlightedIndex === i ? "bg-blue-100" : "hover:bg-blue-50"
+              }`}
+              onMouseEnter={() => setHighlightedIndex(i)}
+            >
+              <img
+                src={imageMap[roadmap.title] || "/fallback-image.jpg"}
+                alt={roadmap.title}
+                className="w-6 h-6 rounded object-cover"
+              />
+              <span className="text-sm">{roadmap.title}</span>
+            </li>
+          ))}
         </ul>
       )}
     </div>
   );
 
-  const renderSearchDropdown = () => {
-    if (loading) return <li className="px-4 py-2 text-gray-500 text-sm">Loading...</li>;
-    if (searchTerm.trim() && filteredRoadmaps.length === 0)
-      return <li className="px-4 py-2 text-gray-500 text-sm">No matching roadmaps</li>;
-    return filteredRoadmaps.map((roadmap, index) => (
-      <li
-        key={roadmap._id}
-        className={`flex items-center gap-2 px-4 py-2 cursor-pointer ${
-          index === highlightedIndex ? "bg-blue-100" : "hover:bg-blue-50"
-        }`}
-        onMouseEnter={() => setHighlightedIndex(index)}
-        onClick={() => {
-          navigate(`/roadmap/${roadmap._id}`);
-          setSearchTerm("");
-          setFilteredRoadmaps([]);
-          setIsMobileMenuOpen(false);
-        }}
-      >
-        <img
-          src={imageMap[roadmap.title] || "/fallback-image.jpg"}
-          alt={roadmap.title}
-          className="w-6 h-6 rounded object-cover"
-        />
-        <span>{roadmap.title}</span>
-      </li>
-    ));
-  };
-
   return (
     <>
-      <nav className="bg-white shadow-md sticky top-0 z-50 border-b">
+      <nav className="bg-white border-b shadow-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             <Link to="/" className="flex items-center gap-2">
-              <img
-                src="/logo.png"
-                alt="CareerCraft Logo"
-                className="h-9 md:h-12 w-auto object-contain"
-              />
+              <img src="/logo.png" alt="CareerCraft" className="h-10 w-auto" />
             </Link>
-            <div className="relative hidden md:flex items-center w-full max-w-xl">
-              {renderSearchInput()}
-            </div>
-            <div className="hidden md:flex items-center space-x-6">
+            <div className="hidden md:flex flex-1 justify-center">{renderSearchInput()}</div>
+            <div className="hidden md:flex items-center gap-4">
               <Link to="/" className={navLinkClass("/")}>Home</Link>
               <Link to="/dashboard" className={navLinkClass("/dashboard")}>Explore</Link>
               {user ? (
@@ -201,7 +179,7 @@ const Navbar = () => {
                   <Link to="/profile" className={navLinkClass("/profile")}>Profile</Link>
                   <button
                     onClick={handleLogout}
-                    className="text-red-600 hover:text-red-800 text-sm font-medium"
+                    className="text-red-600 hover:text-red-800 text-sm font-semibold"
                   >
                     Logout
                   </button>
@@ -214,7 +192,7 @@ const Navbar = () => {
               )}
             </div>
             <div className="md:hidden">
-              <button onClick={toggleMenu} className="text-gray-700 hover:text-blue-600">
+              <button onClick={toggleMenu}>
                 {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
               </button>
             </div>
@@ -223,36 +201,34 @@ const Navbar = () => {
       </nav>
 
       {!isMobileMenuOpen && (
-        <div className="md:hidden bg-white px-4 py-2 shadow-sm sticky top-16 z-40">
+        <div className="md:hidden px-4 py-2 bg-white border-b sticky top-16 z-40">
           {renderSearchInput()}
         </div>
       )}
 
       {isMobileMenuOpen && (
-        <div className="md:hidden px-4 pt-3 pb-6 space-y-2 border-t bg-white">
-          <div className="flex flex-col space-y-2">
-            <Link to="/" className={navLinkClass("/")}>Home</Link>
-            <Link to="/dashboard" className={navLinkClass("/dashboard")}>Explore</Link>
-            {user ? (
-              <>
-                <Link to="/profile" className={navLinkClass("/profile")}>Profile</Link>
-                <button
-                  onClick={() => {
-                    handleLogout();
-                    toggleMenu();
-                  }}
-                  className="text-red-600 hover:text-red-800 block px-4 py-2 rounded-md text-sm font-medium text-left"
-                >
-                  Logout
-                </button>
-              </>
-            ) : (
-              <>
-                <Link to="/login" className={navLinkClass("/login")}>Login</Link>
-                <Link to="/signup" className={navLinkClass("/signup")}>Signup</Link>
-              </>
-            )}
-          </div>
+        <div className="md:hidden bg-white px-4 py-4 border-t shadow-md space-y-3">
+          <Link to="/" className={navLinkClass("/")}>Home</Link>
+          <Link to="/dashboard" className={navLinkClass("/dashboard")}>Explore</Link>
+          {user ? (
+            <>
+              <Link to="/profile" className={navLinkClass("/profile")}>Profile</Link>
+              <button
+                onClick={() => {
+                  handleLogout();
+                  toggleMenu();
+                }}
+                className="text-red-600 text-left w-full font-semibold"
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            <>
+              <Link to="/login" className={navLinkClass("/login")}>Login</Link>
+              <Link to="/signup" className={navLinkClass("/signup")}>Signup</Link>
+            </>
+          )}
         </div>
       )}
     </>
