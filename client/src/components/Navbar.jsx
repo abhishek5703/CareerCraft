@@ -48,8 +48,7 @@ const Navbar = () => {
   const isActive = (path) => location.pathname === path;
 
   const navLinkClass = (path) =>
-    `text-sm font-semibold px-4 py-2 rounded-md transition-all duration-200 ${
-      isActive(path) ? "text-blue-600 bg-blue-100" : "text-gray-700 hover:bg-gray-100"
+    `text-sm font-semibold px-4 py-2 rounded-md transition-all duration-200 ${isActive(path) ? "text-blue-600 bg-blue-100" : "text-gray-700 hover:bg-gray-100"
     }`;
 
   const handleLogout = () => {
@@ -144,9 +143,8 @@ const Navbar = () => {
                 navigate(`/roadmap/${roadmap._id}`);
                 resetSearch();
               }}
-              className={`flex items-center gap-3 px-4 py-2 cursor-pointer transition-all ${
-                highlightedIndex === i ? "bg-blue-100" : "hover:bg-blue-50"
-              }`}
+              className={`flex items-center gap-3 px-4 py-2 cursor-pointer transition-all ${highlightedIndex === i ? "bg-blue-100" : "hover:bg-blue-50"
+                }`}
               onMouseEnter={() => setHighlightedIndex(i)}
             >
               <img
@@ -164,11 +162,11 @@ const Navbar = () => {
 
   return (
     <>
-      <nav className="bg-white border-b shadow-sm sticky top-0 z-50">
+      <nav className="bg-white/70 backdrop-blur-md shadow-md sticky top-0 z-50 border-b border-gray-200 rounded-b-xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             <Link to="/" className="flex items-center gap-2">
-              <img src="/logo.png" alt="CareerCraft" className="h-10 w-auto" />
+              <img src="/logo.png" alt="CareerCraft" className="h-12 w-auto" />
             </Link>
             <div className="hidden md:flex flex-1 justify-center">{renderSearchInput()}</div>
             <div className="hidden md:flex items-center gap-4">
@@ -207,28 +205,31 @@ const Navbar = () => {
       )}
 
       {isMobileMenuOpen && (
-        <div className="md:hidden bg-white px-4 py-4 border-t shadow-md space-y-3">
-          <Link to="/" className={navLinkClass("/")}>Home</Link>
-          <Link to="/dashboard" className={navLinkClass("/dashboard")}>Explore</Link>
-          {user ? (
-            <>
-              <Link to="/profile" className={navLinkClass("/profile")}>Profile</Link>
-              <button
-                onClick={() => {
-                  handleLogout();
-                  toggleMenu();
-                }}
-                className="text-red-600 text-left w-full font-semibold"
-              >
-                Logout
-              </button>
-            </>
-          ) : (
-            <>
-              <Link to="/login" className={navLinkClass("/login")}>Login</Link>
-              <Link to="/signup" className={navLinkClass("/signup")}>Signup</Link>
-            </>
-          )}
+        <div className="md:hidden px-4 pt-3 pb-6 space-y-2 border-t bg-white">
+          <div className="flex flex-col space-y-2">
+            <Link to="/" className={navLinkClass("/")}>Home</Link>
+            <Link to="/dashboard" className={navLinkClass("/dashboard")}>Explore</Link>
+            {user ? (
+              <>
+                <Link to="/profile" className={navLinkClass("/profile")}>Profile</Link>
+                <Link
+                  to="/login"
+                  onClick={() => {
+                    handleLogout();
+                    toggleMenu();
+                  }}
+                  className="block w-full text-left px-4 py-2 rounded-md text-sm font-medium text-red-600 hover:bg-red-50 transition"
+                >
+                  Logout
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link to="/login" className={navLinkClass("/login")}>Login</Link>
+                <Link to="/signup" className={navLinkClass("/signup")}>Signup</Link>
+              </>
+            )}
+          </div>
         </div>
       )}
     </>
