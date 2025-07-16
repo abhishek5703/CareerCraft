@@ -1,9 +1,9 @@
 import { useState } from "react";
-import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { motion } from "framer-motion";
 import { UserPlus, Mail, Lock, User, Eye, EyeOff } from "lucide-react";
+import api from "../services/api"; // uses VITE_API_BASE_URL
 
 const Signup = () => {
   const [form, setForm] = useState({ name: "", email: "", password: "", confirmPassword: "" });
@@ -25,7 +25,7 @@ const Signup = () => {
 
     try {
       const { name, email, password } = form;
-      await axios.post("http://localhost:5000/api/auth/signup", { name, email, password });
+      await api.post("/auth/signup", { name, email, password });
       toast.success("Signup successful! You can now login 🎉");
       navigate("/login");
     } catch (err) {

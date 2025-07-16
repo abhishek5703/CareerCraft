@@ -12,9 +12,11 @@ const router = express.Router();
 // Update progress route (secure)
 router.post("/update", requireAuth, updateProgress);
 
-// New secure route to get progress for logged-in user
+// More specific route FIRST
+router.get("/user/:userId/roadmaps", requireAuth, getAllRoadmapProgressForUser);
+
+// Then the generic one
 router.get("/:roadmapId", requireAuth, getProgressForLoggedInUser);
 
-router.get("/user/:userId/roadmaps", requireAuth, getAllRoadmapProgressForUser);
 
 export default router;

@@ -1,10 +1,11 @@
 import { useState } from "react";
-import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import toast from "react-hot-toast";
 import { LogIn, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { motion } from "framer-motion";
+import api from "../service/api"; // ✅ Correct path
+
 
 const Login = () => {
   const { login } = useAuth();
@@ -19,9 +20,9 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post("http://localhost:5000/api/auth/login", form);
+      const res = await api.post("/auth/login", form); // ✅ No hardcoded URL
       login(res.data.token, res.data.user);
-      toast.success("Logged in successfully ");
+      toast.success("Logged in successfully");
       navigate("/");
     } catch (err) {
       const errorMessage =
