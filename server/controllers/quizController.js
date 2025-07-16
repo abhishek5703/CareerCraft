@@ -1,7 +1,7 @@
 import QuizQuestion from "../models/QuizQuestion.js";
 import QuizAttempt from "../models/QuizAttempt.js";
 
-// ✅ Get quiz questions for a roadmap
+// Get quiz questions for a roadmap
 export const getQuizQuestions = async (req, res) => {
   try {
     const questions = await QuizQuestion.find({ roadmapId: req.params.roadmapId });
@@ -17,7 +17,7 @@ export const getQuizQuestions = async (req, res) => {
   }
 };
 
-// ✅ Save quiz attempt (for history tracking)
+// Save quiz attempt (for history tracking)
 export const submitQuiz = async (req, res) => {
   const { roadmapId, score, total } = req.body;
   const userId = req.user?.id;
@@ -37,7 +37,7 @@ export const submitQuiz = async (req, res) => {
   }
 };
 
-// ✅ Get quiz attempt history for roadmap + user
+// Get quiz attempt history for roadmap + user
 export const getQuizAttempts = async (req, res) => {
   const { roadmapId } = req.params;
   const userId = req.user?.id;
@@ -60,17 +60,17 @@ export const getQuizAttempts = async (req, res) => {
   }
 };
 
-// ✅ Get all attempts grouped by roadmap for a user
+// Get all attempts grouped by roadmap for a user
 export const getUserRoadmapAttempts = async (req, res) => {
   try {
     const userId = req.params.userId;
-    console.log("🚀 Fetching roadmap attempts for userId:", userId);
+    console.log("Fetching roadmap attempts for userId:", userId);
 
     const attempts = await QuizAttempt.find({ userId })
       .sort({ attemptedAt: -1 })
       .populate("roadmapId", "title");
 
-    console.log("📊 Raw attempts found:", attempts.length);
+    console.log("Raw attempts found:", attempts.length);
 
     const grouped = {};
     attempts.forEach((attempt) => {
@@ -90,7 +90,7 @@ export const getUserRoadmapAttempts = async (req, res) => {
 
     res.status(200).json(Object.values(grouped));
   } catch (err) {
-    console.error("❌ Error in getUserRoadmapAttempts:", err);
+    console.error("Error in getUserRoadmapAttempts:", err);
     res.status(500).json({ error: "Failed to fetch roadmap-wise attempts" });
   }
 };

@@ -8,7 +8,7 @@ const quizQuestionSchema = new mongoose.Schema({
   },
   section: {
     type: String,
-    required: true, // 🔥 Required for section-wise score tracking
+    required: true, 
     trim: true,
   },
   question: {

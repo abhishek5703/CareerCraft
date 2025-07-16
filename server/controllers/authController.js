@@ -37,7 +37,7 @@ export const login = async (req, res) => {
     console.log("User found:", user);
 
     if (!user) {
-      console.log("❌ User not found");
+      console.log("User not found");
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
@@ -45,13 +45,13 @@ export const login = async (req, res) => {
     console.log("Password match:", match);
 
     if (!match) {
-      console.log("❌ Password did not match");
+      console.log("Password did not match");
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
     const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: "1d" });
 
-    console.log("✅ Login successful");
+    console.log("Login successful");
     res.json({
       token,
       user: { _id: user._id, name: user.name, email: user.email }

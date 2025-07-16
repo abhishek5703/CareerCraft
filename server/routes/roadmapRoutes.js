@@ -7,7 +7,7 @@ const router = express.Router();
 // Get all roadmaps
 router.get("/", requireAuth, getAllRoadmaps);
 
-// ✅ Add this route to get a specific roadmap by ID
+// Add this route to get a specific roadmap by ID
 router.get("/:id", requireAuth, getRoadmapById);
 
 export default router;

@@ -13,10 +13,10 @@ import {
 import api from "../services/api";
 
 const getFeedback = (percentage) => {
-  if (percentage >= 90) return "🌟 Excellent performance!";
-  if (percentage >= 70) return "✅ Good job, keep it up!";
-  if (percentage >= 50) return "🛠 Needs improvement.";
-  return "📚 Consider revisiting the topics.";
+  if (percentage >= 90) return "Excellent performance!";
+  if (percentage >= 70) return "Good job, keep it up!";
+  if (percentage >= 50) return "Needs improvement.";
+  return "Consider revisiting the topics.";
 };
 
 const QuizAttempts = () => {

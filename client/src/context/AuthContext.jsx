@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import toast from "react-hot-toast"; // ✅ Import this
+import toast from "react-hot-toast"; 
 
 const AuthContext = createContext();
 
@@ -28,7 +28,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("user");
     setToken(null);
     setUser(null);
-    toast.success("Logged out successfully"); // ✅ Toast added
+    toast.success("Logged out successfully"); 
   };
 
   return (

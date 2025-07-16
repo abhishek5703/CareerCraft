@@ -5,13 +5,13 @@ import './index.css';
 
 import { AuthProvider } from './context/AuthContext.jsx';
 import { ProgressProvider } from './context/ProgressContext.jsx';
-import { RoadmapProvider } from './context/RoadmapContext.jsx'; // ✅ import here
+import { RoadmapProvider } from './context/RoadmapContext.jsx'; 
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <AuthProvider>
       <ProgressProvider>
-        <RoadmapProvider> {/* ✅ wrap your App */}
+        <RoadmapProvider> 
           <App />
         </RoadmapProvider>
       </ProgressProvider>

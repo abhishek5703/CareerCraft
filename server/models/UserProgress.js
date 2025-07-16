@@ -12,7 +12,7 @@ const userProgressSchema = new mongoose.Schema({
     required: true,
   },
   completedSteps: {
-    type: [String],  // <-- store step titles
+    type: [String],  
     default: [],
   },
 }, {

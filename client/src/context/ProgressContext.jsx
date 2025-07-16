@@ -1,4 +1,3 @@
-// src/context/ProgressContext.jsx
 import { createContext, useContext, useState } from "react";
 
 const ProgressContext = createContext();
@@ -11,7 +10,7 @@ export const ProgressProvider = ({ children }) => {
       ...prev,
       [roadmapId]: {
         completed: completedSteps.length,
-        total: totalSteps, // ✅ MUST include this!
+        total: totalSteps, 
       },
     }));
   };

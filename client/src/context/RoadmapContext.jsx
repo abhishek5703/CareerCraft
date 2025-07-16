@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import api from "../services/api"; // make sure this points to your axios setup
+import api from "../services/api"; 
 
 const RoadmapContext = createContext();
 
@@ -11,7 +11,7 @@ export const RoadmapProvider = ({ children }) => {
     const fetchRoadmaps = async () => {
       try {
         const res = await api.get("/roadmaps");
-        setRoadmaps(res.data); // assumes each roadmap has _id and title
+        setRoadmaps(res.data); 
       } catch (err) {
         console.error("Failed to fetch roadmaps:", err);
       } finally {

@@ -1,4 +1,3 @@
-// src/App.jsx
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import Login from "./pages/Login";
@@ -16,7 +15,7 @@ import Layout from "./components/Layout";
 function App() {
   return (
     <BrowserRouter>
-      {/* ✅ GLOBAL TOASTER */}
+      {/* GLOBAL TOASTER */}
       <Toaster
         position="top-center"
         toastOptions={{

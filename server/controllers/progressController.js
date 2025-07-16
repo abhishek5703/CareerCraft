@@ -1,4 +1,4 @@
-import UserProgress from "../models/UserProgress.js";  // <-- import the model
+import UserProgress from "../models/UserProgress.js";  
 import Roadmap from "../models/Roadmap.js";
 
 // updateProgress
@@ -32,7 +32,7 @@ export const getProgressForLoggedInUser = async (req, res) => {
       return res.json({ completedSteps: [] });
     }
 
-    // ✅ Return only the data needed
+    //  Return only the data needed
     res.json({ completedSteps: progress.completedSteps });
   } catch (err) {
     console.error("Error fetching progress:", err);
@@ -44,7 +44,7 @@ export const getAllRoadmapProgressForUser = async (req, res) => {
   const userId = req.params.userId;
 
   try {
-    // ✅ Get all roadmaps
+    //  Get all roadmaps
     const allRoadmaps = await Roadmap.find({});
     const userProgress = await UserProgress.find({ userId });
 
