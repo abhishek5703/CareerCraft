@@ -4,7 +4,8 @@ import { useAuth } from "../context/AuthContext";
 import toast from "react-hot-toast";
 import { LogIn, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { motion } from "framer-motion";
-import api from "../service/api"; // ✅ Correct path
+import api from "../services/api";
+
 
 
 const Login = () => {

@@ -3,7 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { motion } from "framer-motion";
 import { UserPlus, Mail, Lock, User, Eye, EyeOff } from "lucide-react";
-import api from "../services/api"; // uses VITE_API_BASE_URL
+import api from "../services/api";
+
 
 const Signup = () => {
   const [form, setForm] = useState({ name: "", email: "", password: "", confirmPassword: "" });
