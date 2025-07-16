@@ -193,13 +193,13 @@ const RoadmapDetail = () => {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button
               onClick={() => navigate(`/quiz/${roadmapId}/instructions`)}
-              className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg font-medium transition"
+              className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg font-medium transition cursor-pointer"
             >
               Take Quiz
             </button>
             <button
               onClick={() => navigate(`/quiz/${roadmapId}/attempts`)}
-              className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-medium transition"
+              className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-medium transition cursor-pointer"
             >
               View Past Attempts
             </button>
