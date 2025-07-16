@@ -3,7 +3,7 @@ import { FaLinkedin, FaGithub, FaEnvelope } from "react-icons/fa";
 
 const Footer = () => {
   return (
-    <footer className="backdrop-blur-sm bg-white/70 border-t border-gray-200 shadow-md px-6 py-16 mt-28">
+    <footer className="backdrop-blur-sm bg-gray-100/60 border-t border-gray-200 shadow-md px-6 py-16 mt-28">
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
 
         {/* Branding */}
