@@ -54,10 +54,9 @@ const Navbar = () => {
   };
 
   const navLinkClass = (path) =>
-    `text-sm font-semibold px-4 py-2 rounded-lg transition-all duration-200 ${
-      isActive(path)
-        ? "bg-blue-100 text-blue-700"
-        : "text-gray-700 hover:bg-gray-100 hover:text-blue-600"
+    `text-sm font-semibold px-4 py-2 rounded-lg transition-all duration-200 ${isActive(path)
+      ? "bg-blue-100 text-blue-700"
+      : "text-gray-700 hover:bg-gray-100 hover:text-blue-600"
     }`;
 
   useEffect(() => {
@@ -148,11 +147,10 @@ const Navbar = () => {
                 navigate(`/roadmap/${roadmap._id}`);
                 resetSearch();
               }}
-              className={`flex items-center gap-3 px-4 py-2 cursor-pointer transition-all ${
-                highlightedIndex === i
+              className={`flex items-center gap-3 px-4 py-2 cursor-pointer transition-all ${highlightedIndex === i
                   ? "bg-blue-100"
                   : "hover:bg-blue-50"
-              }`}
+                }`}
               onMouseEnter={() => setHighlightedIndex(i)}
             >
               <img
@@ -217,16 +215,34 @@ const Navbar = () => {
       {isMobileMenuOpen && (
         <div className="md:hidden px-4 pt-3 pb-6 space-y-2 border-t bg-white">
           <div className="flex flex-col space-y-2">
-            <Link to="/" className={navLinkClass("/")}>Home</Link>
-            <Link to="/dashboard" className={navLinkClass("/dashboard")}>Explore</Link>
+            <Link
+              to="/"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className={navLinkClass("/")}
+            >
+              Home
+            </Link>
+            <Link
+              to="/dashboard"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className={navLinkClass("/dashboard")}
+            >
+              Explore
+            </Link>
             {user ? (
               <>
-                <Link to="/profile" className={navLinkClass("/profile")}>Profile</Link>
+                <Link
+                  to="/profile"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={navLinkClass("/profile")}
+                >
+                  Profile
+                </Link>
                 <Link
                   to="/login"
                   onClick={() => {
                     handleLogout();
-                    toggleMenu();
+                    setIsMobileMenuOpen(false);
                   }}
                   className="block w-full text-left px-4 py-2 rounded-md text-sm font-medium text-red-600 hover:bg-red-50 transition cursor-pointer"
                 >
@@ -235,13 +251,26 @@ const Navbar = () => {
               </>
             ) : (
               <>
-                <Link to="/login" className={navLinkClass("/login")}>Login</Link>
-                <Link to="/signup" className={navLinkClass("/signup")}>Signup</Link>
+                <Link
+                  to="/login"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={navLinkClass("/login")}
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/signup"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={navLinkClass("/signup")}
+                >
+                  Signup
+                </Link>
               </>
             )}
           </div>
         </div>
       )}
+
     </>
   );
 };
