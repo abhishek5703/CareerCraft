@@ -11,6 +11,7 @@ import Profile from "./pages/Profile";
 import QuizInstructions from "./pages/QuizInstructions";
 import QuizAttempts from "./pages/QuizAttempts";
 import Layout from "./components/Layout";
+import About from "./pages/About";
 
 function App() {
   return (
@@ -47,6 +48,7 @@ function App() {
           <Route index element={<Home />} />
           <Route path="login" element={<Login />} />
           <Route path="signup" element={<Signup />} />
+          <Route path="/about" element={<About />} />
           <Route
             path="dashboard"
             element={

@@ -148,8 +148,8 @@ const Navbar = () => {
                 resetSearch();
               }}
               className={`flex items-center gap-3 px-4 py-2 cursor-pointer transition-all ${highlightedIndex === i
-                  ? "bg-blue-100"
-                  : "hover:bg-blue-50"
+                ? "bg-blue-100"
+                : "hover:bg-blue-50"
                 }`}
               onMouseEnter={() => setHighlightedIndex(i)}
             >
@@ -196,6 +196,7 @@ const Navbar = () => {
                   <Link to="/signup" className={navLinkClass("/signup")}>Signup</Link>
                 </>
               )}
+              <Link to="/about" className={navLinkClass("/about")}>About Us</Link>
             </div>
             <div className="md:hidden">
               <button onClick={toggleMenu}>
@@ -267,6 +268,14 @@ const Navbar = () => {
                 </Link>
               </>
             )}
+            <Link
+              to="/about"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className={navLinkClass("/about")}
+            >
+              About Us
+            </Link>
+
           </div>
         </div>
       )}
