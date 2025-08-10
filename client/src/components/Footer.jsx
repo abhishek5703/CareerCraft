@@ -24,7 +24,7 @@ const Footer = () => {
             <li><Link to="/" className="hover:text-blue-600 transition">Home</Link></li>
             <li><Link to="/dashboard" className="hover:text-blue-600 transition">Dashboard</Link></li>
             <li><Link to="/profile" className="hover:text-blue-600 transition">Profile</Link></li>
-            <li><Link to="/quiz/results" className="hover:text-blue-600 transition">Quiz Results</Link></li>
+            <li><Link to="/dashboard" className="hover:text-blue-600 transition">Quiz Results</Link></li>
             <li><Link to="/dashboard" className="hover:text-blue-600 transition">Roadmaps</Link></li>
           </ul>
         </div>
@@ -35,10 +35,10 @@ const Footer = () => {
             Connect
           </h3>
           <div className="flex gap-5 mt-3 text-2xl text-gray-600">
-            <a href="https://linkedin.com" target="_blank" rel="noreferrer" className="hover:text-blue-600 hover:scale-110 transition duration-300" title="LinkedIn">
+            <a href="https://www.linkedin.com/in/abhishekkumar8983/" target="_blank" rel="noreferrer" className="hover:text-blue-600 hover:scale-110 transition duration-300" title="LinkedIn">
               <FaLinkedin />
             </a>
-            <a href="https://github.com" target="_blank" rel="noreferrer" className="hover:text-gray-900 hover:scale-110 transition duration-300" title="GitHub">
+            <a href="https://github.com/abhishek5703" target="_blank" rel="noreferrer" className="hover:text-gray-900 hover:scale-110 transition duration-300" title="GitHub">
               <FaGithub />
             </a>
             <a href="mailto:hello@careercraft.com" className="hover:text-pink-500 hover:scale-110 transition duration-300" title="Email">
