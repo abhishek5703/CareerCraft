@@ -81,7 +81,7 @@ const QuizInstructions = () => {
         <div className="text-center mt-10">
           <button
             onClick={handleStartQuiz}
-            className="text-lg px-8 py-3 rounded-full font-semibold text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 transition"
+            className="text-lg px-8 py-3 rounded-full font-semibold text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 transition cursor-pointer"
           >
             🚀 Start Quiz
           </button>
@@ -115,13 +115,13 @@ const QuizInstructions = () => {
               <div className="flex justify-end gap-4">
                 <button
                   onClick={cancelStart}
-                  className="px-4 py-2 rounded-md border border-gray-300 hover:bg-gray-100 text-gray-700"
+                  className="px-4 py-2 rounded-md border border-gray-300 hover:bg-gray-100 text-gray-700 cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={confirmStart}
-                  className="px-5 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 transition"
+                  className="px-5 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 transition cursor-pointer"
                 >
                   Start Now
                 </button>

@@ -40,7 +40,7 @@ const Navbar = () => {
   const [typedPlaceholder, setTypedPlaceholder] = useState("");
 
   const placeholderIndex = useRef(0);
-  const charIndex = useRef(0);
+  const charIndex = useRef(-1);
   const direction = useRef("forward");
   const typingInterval = useRef(null);
   const inputRef = useRef(null);
@@ -59,24 +59,31 @@ const Navbar = () => {
     }`;
 
   useEffect(() => {
-    typingInterval.current = setInterval(() => {
-      const text = animatedPlaceholders[placeholderIndex.current];
-      if (direction.current === "forward") {
-        setTypedPlaceholder((prev) => prev + text.charAt(charIndex.current));
-        charIndex.current++;
-        if (charIndex.current === text.length) direction.current = "backward";
-      } else {
-        setTypedPlaceholder((prev) => prev.slice(0, -1));
-        if (typedPlaceholder.length === 0) {
-          direction.current = "forward";
-          placeholderIndex.current =
-            (placeholderIndex.current + 1) % animatedPlaceholders.length;
-          charIndex.current = 0;
-        }
+  typingInterval.current = setInterval(() => {
+    const text = animatedPlaceholders[placeholderIndex.current];
+
+    if (direction.current === "forward") {
+      charIndex.current++;
+      setTypedPlaceholder(text.substring(0, charIndex.current));
+
+      if (charIndex.current === text.length) {
+        direction.current = "backward";
       }
-    }, 45);
-    return () => clearInterval(typingInterval.current);
-  }, [typedPlaceholder]);
+    } else {
+      charIndex.current--;
+      setTypedPlaceholder(text.substring(0, charIndex.current));
+
+      if (charIndex.current === 0) {
+        direction.current = "forward";
+        placeholderIndex.current =
+          (placeholderIndex.current + 1) % animatedPlaceholders.length;
+      }
+    }
+  }, 45);
+
+  return () => clearInterval(typingInterval.current);
+}, []);
+
 
   useEffect(() => {
     if (!searchTerm.trim()) return setFilteredRoadmaps([]);

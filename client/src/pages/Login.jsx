@@ -21,7 +21,7 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await api.post("/auth/login", form); // ✅ No hardcoded URL
+      const res = await api.post("/auth/login", form); 
       login(res.data.token, res.data.user);
       toast.success("Logged in successfully");
       navigate("/");
