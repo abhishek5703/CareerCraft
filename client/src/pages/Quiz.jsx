@@ -167,9 +167,9 @@ const Quiz = () => {
             <span className="text-sm text-gray-700 font-medium">{timer}s</span>
             <button
               onClick={() => setPaused(!paused)}
-              className={`ml-2 text-xs px-2 py-1 rounded-full font-medium ${paused ? "bg-green-600 text-white" : "bg-yellow-500 text-black"}`}
+              className={`ml-2 text-xs px-2 py-1 rounded-full font-medium ${paused ? "bg-green-600 text-white" : "bg-red-500 text-white"} cursor-pointer`}
             >
-              {paused ? "▶ Resume" : "⏸ Pause"}
+              {paused ? " Resume " : " Pause "}
             </button>
           </div>
 
@@ -185,11 +185,10 @@ const Quiz = () => {
               <button
                 key={idx}
                 onClick={() => handleOptionClick(option)}
-                className={`block w-full text-left px-5 py-3 rounded-xl border font-medium transition ${
-                  selected === option
+                className={`block w-full text-left px-5 py-3 rounded-xl border font-medium transition ${selected === option
                     ? "bg-indigo-600 text-white border-indigo-600"
-                    : "bg-white hover:bg-gray-100 border-gray-200"
-                }`}
+                    : "bg-white hover:bg-gray-300 border-gray-500"
+                  } cursor-pointer`}
               >
                 {option}
               </button>
@@ -200,18 +199,18 @@ const Quiz = () => {
           <div className="mt-8 flex justify-between gap-4">
             <button
               onClick={() => handleNext(true)}
-              className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-5 py-2 rounded-lg font-semibold transition"
+              className="bg-blue-100 hover:bg-blue-200 text-blue-800 px-5 py-2 rounded-lg font-semibold transition cursor-pointer"
             >
-              ⏭ Skip
+              Skip
             </button>
+
             <button
               onClick={() => handleNext(false)}
               disabled={!selected}
-              className={`px-6 py-2 rounded-lg font-semibold transition ${
-                selected
+              className={`px-6 py-2 rounded-lg font-semibold transition ${selected
                   ? "bg-green-600 hover:bg-green-700 text-white"
                   : "bg-gray-300 text-gray-600 cursor-not-allowed"
-              }`}
+                } cursor-pointer`}
             >
               {current + 1 < questions.length ? "Next" : "Submit"}
             </button>
