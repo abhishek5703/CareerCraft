@@ -40,7 +40,7 @@ async function connectDB() {
 // Health check
 app.get("/", async (req, res) => {
   await connectDB();
-  res.send("CareerCraft Backend is running 🚀");
+  res.send("CareerCraft Backend is running");
 });
 
 // Routes
