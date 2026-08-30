@@ -5,6 +5,7 @@ import { useAuth } from "../context/AuthContext";
 import { useProgress } from "../context/ProgressContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, ChevronUp, CheckCircle } from "lucide-react";
+import RoadmapAIChatbot from "../components/RoadmapAIChatbot";
 
 const RoadmapDetail = () => {
   const { roadmapId } = useParams();
@@ -206,6 +207,9 @@ const RoadmapDetail = () => {
           </div>
         </motion.div>
       )}
+
+      {/* AI CHATBOT */}
+      <RoadmapAIChatbot roadmap={roadmap} />
     </div>
   );
 };

@@ -8,6 +8,7 @@ import authRoutes from "./routes/authRoutes.js";
 import { requireAuth } from "./middleware/authMiddleware.js";
 import progressRoutes from "./routes/progressRoutes.js";
 import quizRoutes from "./routes/quizRoutes.js";
+import aiRoutes from "./routes/aiRoutes.js";
 
 dotenv.config();
 
@@ -69,4 +70,16 @@ app.use("/api/quiz", async (req, res, next) => {
   next();
 }, quizRoutes);
 
+// AI chatbot (does not require MongoDB)
+app.use("/api/ai", aiRoutes);
+
 export default app;
+
+
+const PORT = process.env.PORT || 5000;
+
+if (process.env.NODE_ENV !== "production") {
+  app.listen(PORT, () => {
+    console.log(`CareerCraft Backend running at http://localhost:${PORT}`);
+  });
+}

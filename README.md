@@ -68,6 +68,43 @@ npm run dev
 ```
 Visit: http://localhost:5173
 
+
+## 🤖 AI Roadmap Chatbot
+
+CareerCraft now includes an authenticated AI chatbot on roadmap detail pages. The backend supports two zero/low-cost modes:
+
+- **Ollama (recommended for local development):** runs an open model on your machine, so there is no per-request API bill.
+- **Gemini Free Tier (recommended for deployment):** use a Google AI Studio API key and keep the backend provider set to `gemini` or use `auto` with `GEMINI_API_KEY` configured. Google currently documents free input/output tokens for eligible Gemini models, subject to the free-tier limits.
+
+### Local setup with Ollama
+
+Install Ollama, then download a small model:
+
+```bash
+ollama pull gemma3:4b
+```
+
+Start the backend with:
+
+```bash
+cd server
+npm run dev
+```
+
+The default `AI_PROVIDER=auto` tries local Ollama first.
+
+### Deployment setup with Gemini
+
+Create a key in Google AI Studio and configure your deployment environment with:
+
+```env
+AI_PROVIDER=gemini
+GEMINI_API_KEY=your_key
+GEMINI_MODEL=gemini-3.7-flash
+```
+
+Do **not** put the Gemini key in the Vite client environment; it must remain server-side.
+
 ## 🧪 How to Use
 
 🔐 Login or Signup to access roadmaps and quizzes.
