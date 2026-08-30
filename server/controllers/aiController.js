@@ -208,6 +208,7 @@ async function callGemini({
 
     headers: {
       "Content-Type": "application/json",
+      Accept: "application/json",
       "x-goog-api-key": apiKey,
     },
 
@@ -295,6 +296,7 @@ async function callGeminiStream({
 
     {
       role: "user",
+
       parts: [
         {
           text: message,
@@ -308,6 +310,7 @@ async function callGeminiStream({
 
     headers: {
       "Content-Type": "application/json",
+      Accept: "text/event-stream",
       "x-goog-api-key": apiKey,
     },
 
@@ -330,12 +333,19 @@ async function callGeminiStream({
   });
 
   if (!response.ok) {
-    const data = await response
-      .json()
-      .catch(() => ({}));
+    const errorText = await response.text();
+
+    let data = {};
+
+    try {
+      data = JSON.parse(errorText);
+    } catch {
+      // Response was not JSON.
+    }
 
     throw new Error(
       data?.error?.message ||
+        errorText ||
         `Gemini streaming request failed (${response.status})`
     );
   }
@@ -354,136 +364,135 @@ async function callGeminiStream({
   let buffer = "";
   let fullReply = "";
 
+  const processEvent = (rawEvent) => {
+    if (!rawEvent) return;
+
+    const normalized = rawEvent
+      .replace(/\r\n/g, "\n")
+      .replace(/\r/g, "\n");
+
+    const lines = normalized.split("\n");
+
+    const dataLines = [];
+
+    for (const line of lines) {
+      if (line.startsWith("data:")) {
+        dataLines.push(
+          line.slice(5).trimStart()
+        );
+      }
+    }
+
+    if (!dataLines.length) {
+      return;
+    }
+
+    const dataText =
+      dataLines.join("\n").trim();
+
+    if (
+      !dataText ||
+      dataText === "[DONE]"
+    ) {
+      return;
+    }
+
+    let data;
+
+    try {
+      data = JSON.parse(dataText);
+    } catch (error) {
+      console.warn(
+        "Gemini SSE parse error:",
+        error.message,
+        "Raw event:",
+        rawEvent
+      );
+
+      return;
+    }
+
+    const parts =
+      data?.candidates?.[0]
+        ?.content?.parts;
+
+    if (!Array.isArray(parts)) {
+      return;
+    }
+
+    for (const part of parts) {
+      if (
+        typeof part?.text !== "string"
+      ) {
+        continue;
+      }
+
+      const token = part.text;
+
+      if (!token) {
+        continue;
+      }
+
+      fullReply += token;
+
+      if (
+        !res.writableEnded &&
+        !res.destroyed
+      ) {
+        writeStreamChunk(
+          res,
+          token
+        );
+      }
+    }
+  };
+
   try {
     while (true) {
       const { value, done } =
         await reader.read();
 
-      if (done) break;
+      if (done) {
+        break;
+      }
 
       buffer += decoder.decode(value, {
         stream: true,
       });
 
-      const events =
-        buffer.split("\n\n");
+      // Normalize CRLF line endings.
+      buffer = buffer
+        .replace(/\r\n/g, "\n")
+        .replace(/\r/g, "\n");
 
-      buffer = events.pop() || "";
+      let separatorIndex;
 
-      for (const event of events) {
-        const lines = event.split("\n");
+      while (
+        (separatorIndex =
+          buffer.indexOf("\n\n")) !== -1
+      ) {
+        const event = buffer.slice(
+          0,
+          separatorIndex
+        );
 
-        const dataLines = lines
-          .filter((line) =>
-            line.startsWith("data:")
-          )
-          .map((line) =>
-            line.slice(5).trim()
-          );
+        buffer = buffer.slice(
+          separatorIndex + 2
+        );
 
-        if (!dataLines.length) {
-          continue;
-        }
-
-        const dataText =
-          dataLines.join("\n");
-
-        if (
-          !dataText ||
-          dataText === "[DONE]"
-        ) {
-          continue;
-        }
-
-        let data;
-
-        try {
-          data = JSON.parse(dataText);
-        } catch {
-          continue;
-        }
-
-        const parts =
-          data?.candidates?.[0]
-            ?.content?.parts;
-
-        if (!Array.isArray(parts)) {
-          continue;
-        }
-
-        for (const part of parts) {
-          const token =
-            typeof part?.text === "string"
-              ? part.text
-              : "";
-
-          if (!token) continue;
-
-          fullReply += token;
-
-          if (
-            !res.writableEnded &&
-            !res.destroyed
-          ) {
-            writeStreamChunk(
-              res,
-              token
-            );
-          }
-        }
+        processEvent(event);
       }
     }
 
-    /* Process any final buffered event */
+    // Flush decoder.
+    buffer += decoder.decode();
+
+    buffer = buffer
+      .replace(/\r\n/g, "\n")
+      .replace(/\r/g, "\n");
+
     if (buffer.trim()) {
-      const lines =
-        buffer.split("\n");
-
-      const dataLines = lines
-        .filter((line) =>
-          line.startsWith("data:")
-        )
-        .map((line) =>
-          line.slice(5).trim()
-        );
-
-      if (dataLines.length) {
-        try {
-          const data = JSON.parse(
-            dataLines.join("\n")
-          );
-
-          const parts =
-            data?.candidates?.[0]
-              ?.content?.parts;
-
-          if (Array.isArray(parts)) {
-            for (const part of parts) {
-              const token =
-                typeof part?.text ===
-                "string"
-                  ? part.text
-                  : "";
-
-              if (!token) continue;
-
-              fullReply += token;
-
-              if (
-                !res.writableEnded &&
-                !res.destroyed
-              ) {
-                writeStreamChunk(
-                  res,
-                  token
-                );
-              }
-            }
-          }
-        } catch {
-          // Ignore incomplete trailing data.
-        }
-      }
+      processEvent(buffer);
     }
   } finally {
     reader.releaseLock();
@@ -527,7 +536,9 @@ async function callOllama({
 
       body: JSON.stringify({
         model,
+
         stream: false,
+
         keep_alive: "10m",
 
         messages: [
@@ -608,7 +619,9 @@ async function callOllamaStream({
 
       body: JSON.stringify({
         model,
+
         stream: true,
+
         keep_alive: "10m",
 
         messages: [
@@ -673,7 +686,8 @@ async function callOllamaStream({
       const lines =
         buffer.split("\n");
 
-      buffer = lines.pop() || "";
+      buffer =
+        lines.pop() || "";
 
       for (const line of lines) {
         const trimmed =
@@ -689,9 +703,10 @@ async function callOllamaStream({
           continue;
         }
 
-        const token = cleanChunk(
-          data?.message?.content
-        );
+        const token =
+          cleanChunk(
+            data?.message?.content
+          );
 
         if (token) {
           fullReply += token;
@@ -718,9 +733,10 @@ async function callOllamaStream({
         const data =
           JSON.parse(buffer.trim());
 
-        const token = cleanChunk(
-          data?.message?.content
-        );
+        const token =
+          cleanChunk(
+            data?.message?.content
+          );
 
         if (token) {
           fullReply += token;
@@ -750,7 +766,7 @@ async function callOllamaStream({
   }
 
   return fullReply;
-};
+}
 
 /* =========================================================
    PROVIDER SELECTION
@@ -762,16 +778,22 @@ const configuredProvider = (
 ).toLowerCase();
 
 const generateReply = async (payload) => {
-  if (configuredProvider === "gemini") {
+  if (
+    configuredProvider === "gemini"
+  ) {
     return callGemini(payload);
   }
 
-  if (configuredProvider === "ollama") {
+  if (
+    configuredProvider === "ollama"
+  ) {
     return callOllama(payload);
   }
 
   try {
-    return await callOllama(payload);
+    return await callOllama(
+      payload
+    );
   } catch (ollamaError) {
     if (!process.env.GEMINI_API_KEY) {
       throw ollamaError;
@@ -781,23 +803,37 @@ const generateReply = async (payload) => {
   }
 };
 
-const generateStream = async (payload) => {
-  if (configuredProvider === "gemini") {
-    return callGeminiStream(payload);
+const generateStream = async (
+  payload
+) => {
+  if (
+    configuredProvider === "gemini"
+  ) {
+    return callGeminiStream(
+      payload
+    );
   }
 
-  if (configuredProvider === "ollama") {
-    return callOllamaStream(payload);
+  if (
+    configuredProvider === "ollama"
+  ) {
+    return callOllamaStream(
+      payload
+    );
   }
 
   try {
-    return await callOllamaStream(payload);
+    return await callOllamaStream(
+      payload
+    );
   } catch (ollamaError) {
     if (!process.env.GEMINI_API_KEY) {
       throw ollamaError;
     }
 
-    return callGeminiStream(payload);
+    return callGeminiStream(
+      payload
+    );
   }
 };
 
@@ -815,10 +851,14 @@ export const chatWithAI = async (
   );
 
   const history =
-    normalizeHistory(req.body?.history);
+    normalizeHistory(
+      req.body?.history
+    );
 
   const roadmap =
-    compactRoadmap(req.body?.roadmap);
+    compactRoadmap(
+      req.body?.roadmap
+    );
 
   if (!message) {
     return res.status(400).json({
@@ -828,13 +868,16 @@ export const chatWithAI = async (
   }
 
   try {
-    const reply = await generateReply({
-      history,
-      message,
-      roadmap,
-    });
+    const reply =
+      await generateReply({
+        history,
+        message,
+        roadmap,
+      });
 
-    return res.json({ reply });
+    return res.json({
+      reply,
+    });
   } catch (error) {
     console.error(
       "AI chat error:",
@@ -855,7 +898,8 @@ export const chatWithAI = async (
           : "The AI service is not available. Start Ollama locally or configure GEMINI_API_KEY for the deployed backend.",
 
       detail:
-        process.env.NODE_ENV === "development"
+        process.env.NODE_ENV ===
+        "development"
           ? error.message
           : undefined,
     });
@@ -866,91 +910,102 @@ export const chatWithAI = async (
    STREAMING CHAT ENDPOINT
    ========================================================= */
 
-export const streamChatWithAI = async (
-  req,
-  res
-) => {
-  const message = cleanText(
-    req.body?.message,
-    DEFAULT_MAX_MESSAGE_LENGTH
-  );
-
-  const history =
-    normalizeHistory(req.body?.history);
-
-  const roadmap =
-    compactRoadmap(req.body?.roadmap);
-
-  if (!message) {
-    return res.status(400).json({
-      message:
-        "A non-empty message is required.",
-    });
-  }
-
-  res.status(200);
-
-  res.setHeader(
-    "Content-Type",
-    "text/event-stream; charset=utf-8"
-  );
-
-  res.setHeader(
-    "Cache-Control",
-    "no-cache, no-transform"
-  );
-
-  res.setHeader(
-    "Connection",
-    "keep-alive"
-  );
-
-  res.setHeader(
-    "X-Accel-Buffering",
-    "no"
-  );
-
-  res.flushHeaders?.();
-
-  try {
-    await generateStream({
-      history,
-      message,
-      roadmap,
-      res,
-    });
-
-    if (
-      !res.writableEnded &&
-      !res.destroyed
-    ) {
-      writeSse(res, "done", {
-        ok: true,
-      });
-
-      res.end();
-    }
-  } catch (error) {
-    console.error(
-      "AI streaming error:",
-      error.message
+export const streamChatWithAI =
+  async (req, res) => {
+    const message = cleanText(
+      req.body?.message,
+      DEFAULT_MAX_MESSAGE_LENGTH
     );
 
-    if (
-      !res.writableEnded &&
-      !res.destroyed
-    ) {
-      writeSse(res, "error", {
-        message:
-          "The AI service is not available right now.",
+    const history =
+      normalizeHistory(
+        req.body?.history
+      );
 
-        detail:
-          process.env.NODE_ENV === "development"
-            ? error.message
-            : undefined,
+    const roadmap =
+      compactRoadmap(
+        req.body?.roadmap
+      );
+
+    if (!message) {
+      return res.status(400).json({
+        message:
+          "A non-empty message is required.",
+      });
+    }
+
+    res.status(200);
+
+    res.setHeader(
+      "Content-Type",
+      "text/event-stream; charset=utf-8"
+    );
+
+    res.setHeader(
+      "Cache-Control",
+      "no-cache, no-transform"
+    );
+
+    res.setHeader(
+      "Connection",
+      "keep-alive"
+    );
+
+    res.setHeader(
+      "X-Accel-Buffering",
+      "no"
+    );
+
+    res.flushHeaders?.();
+
+    try {
+      await generateStream({
+        history,
+        message,
+        roadmap,
+        res,
       });
 
-      res.end();
+      if (
+        !res.writableEnded &&
+        !res.destroyed
+      ) {
+        writeSse(
+          res,
+          "done",
+          {
+            ok: true,
+          }
+        );
+
+        res.end();
+      }
+    } catch (error) {
+      console.error(
+        "AI streaming error:",
+        error.message
+      );
+
+      if (
+        !res.writableEnded &&
+        !res.destroyed
+      ) {
+        writeSse(
+          res,
+          "error",
+          {
+            message:
+              "The AI service is not available right now.",
+
+            detail:
+              process.env.NODE_ENV ===
+              "development"
+                ? error.message
+                : undefined,
+          }
+        );
+
+        res.end();
+      }
     }
-  }
-};
+  };
