@@ -12,6 +12,8 @@ import QuizInstructions from "./pages/QuizInstructions";
 import QuizAttempts from "./pages/QuizAttempts";
 import Layout from "./components/Layout";
 import About from "./pages/About";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 function App() {
   return (
@@ -48,6 +50,8 @@ function App() {
           <Route index element={<Home />} />
           <Route path="login" element={<Login />} />
           <Route path="signup" element={<Signup />} />
+          <Route path="forgot-password" element={<ForgotPassword />} />
+          <Route path="reset-password" element={<ResetPassword />} />
           <Route path="/about" element={<About />} />
           <Route
             path="dashboard"

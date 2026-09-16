@@ -174,3 +174,25 @@ Open an issue first for significant feature suggestions or changes.
 💼 **LinkedIn**: [linkedin.com/in/abhishekkumar8983](https://www.linkedin.com/in/abhishekkumar8983/)
 
 
+
+## New Authentication, Profile & Smart Resource Features
+
+CareerCraft keeps its original MongoDB/JWT authentication, roadmaps, progress, quiz history and AI flows while adding Firebase Authentication support alongside them.
+
+### Firebase / Google Sign-In setup
+1. Create/open a Firebase project.
+2. Enable Authentication > Sign-in method > Email/Password and Google.
+3. Add `localhost` and your deployed frontend domain under Firebase Authentication > Settings > Authorized domains.
+4. Create a Google Web OAuth client ID and set it as `VITE_GOOGLE_CLIENT_ID`.
+5. Set `FIREBASE_WEB_API_KEY`, `FRONTEND_URL`, `JWT_SECRET` and your existing Mongo/AI environment variables on the server.
+
+### Forgot-password email
+Password reset email delivery uses Firebase Authentication. The server provisions/link-checks Firebase password accounts so older CareerCraft accounts can be migrated the next time they sign in. Firebase's secure reset flow is used for the email action. CareerCraft also includes `/reset-password` as a custom email-action handler when the Firebase email template is configured to use it.
+
+### Profile management
+Users can upload a profile image, edit their display name/photo, remove their photo, and permanently delete their CareerCraft profile. Deleting a profile also removes that user's roadmap progress and quiz-attempt history.
+
+Profile images are resized in the browser and stored with the user document, avoiding reliance on Vercel's ephemeral filesystem.
+
+### Smart Resource Recommendation
+Roadmap steps are enriched at response time with curated, topic-aware resources from official documentation, universities, reputable learning platforms and hands-on practice sites. Existing roadmap URLs are retained as a fallback so current content is not lost.

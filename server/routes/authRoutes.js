@@ -1,9 +1,12 @@
 import express from "express";
-import { signup, login } from "../controllers/authController.js";
-
+import { signup, login, googleLogin, forgotPassword, resetPassword, updateProfile, deleteProfile } from "../controllers/authController.js";
+import { requireAuth } from "../middleware/authMiddleware.js";
 const router = express.Router();
-
 router.post("/signup", signup);
 router.post("/login", login);
-
+router.post("/google", googleLogin);
+router.post("/forgot-password", forgotPassword);
+router.post("/reset-password", resetPassword);
+router.put("/profile", requireAuth, updateProfile);
+router.delete("/profile", requireAuth, deleteProfile);
 export default router;

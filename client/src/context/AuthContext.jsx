@@ -16,9 +16,11 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  const login = (token, userData) => {
+  const login = (token, userData, firebaseData = {}) => {
     localStorage.setItem("token", token);
     localStorage.setItem("user", JSON.stringify(userData));
+    if (firebaseData.firebaseIdToken) localStorage.setItem("firebaseIdToken", firebaseData.firebaseIdToken);
+    if (firebaseData.firebaseRefreshToken) localStorage.setItem("firebaseRefreshToken", firebaseData.firebaseRefreshToken);
     setToken(token);
     setUser(userData);
   };
@@ -26,6 +28,8 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+    localStorage.removeItem("firebaseIdToken");
+    localStorage.removeItem("firebaseRefreshToken");
     setToken(null);
     setUser(null);
     toast.success("Logged out successfully"); 

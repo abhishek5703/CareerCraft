@@ -20,12 +20,13 @@ app.use(
     origin: [
       "http://localhost:5173",
       "https://career-craft-two.vercel.app",
-    ],
+      process.env.FRONTEND_URL,
+    ].filter(Boolean),
     credentials: true,
   })
 );
 
-app.use(express.json());
+app.use(express.json({ limit: "1mb" }));
 
 // MongoDB connection (cached)
 let isConnected = false;

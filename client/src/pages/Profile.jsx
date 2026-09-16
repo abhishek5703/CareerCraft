@@ -1,53 +1,31 @@
-import { useAuth } from "../context/AuthContext";
+import { useRef, useState } from "react";
 import { FaUserCircle, FaEnvelope } from "react-icons/fa";
+import { Camera, Edit3, Save, Trash2, X, ShieldCheck } from "lucide-react";
+import { motion } from "framer-motion";
+import toast from "react-hot-toast";
+import { useAuth } from "../context/AuthContext";
+import api from "../services/api";
+
+const compressImage = (file) => new Promise((resolve, reject) => {
+  if (!file.type.startsWith("image/")) return reject(new Error("Please select an image file."));
+  const reader = new FileReader();
+  reader.onload = () => { const img = new Image(); img.onload = () => { const max=720, ratio=Math.min(1,max/Math.max(img.width,img.height)); const canvas=document.createElement("canvas"); canvas.width=Math.max(1,Math.round(img.width*ratio)); canvas.height=Math.max(1,Math.round(img.height*ratio)); canvas.getContext("2d").drawImage(img,0,0,canvas.width,canvas.height); resolve(canvas.toDataURL("image/jpeg",0.78)); }; img.onerror=reject; img.src=reader.result; };
+  reader.onerror=reject; reader.readAsDataURL(file);
+});
 
 const Profile = () => {
-  const { user } = useAuth();
-
-  if (!user)
-    return <div className="text-center mt-20 text-gray-600 text-lg">Loading profile...</div>;
-
-  const getInitials = (name) => {
-    return name
-      ?.split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase();
-  };
-
-  return (
-    <div className="min-h-[85vh] flex items-center justify-center px-4 py-12 sm:py-16 bg-gradient-to-br from-white to-blue-50">
-      <div className="w-full max-w-md sm:max-w-lg bg-white/80 backdrop-blur-lg border border-gray-200 shadow-xl rounded-2xl p-6 sm:p-8 text-gray-800">
-        <div className="flex flex-col items-center">
-          {/* Avatar */}
-          <div className="mb-4">
-            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-blue-600 text-white flex items-center justify-center text-3xl sm:text-4xl font-bold shadow ring-4 ring-blue-300">
-              {getInitials(user.name)}
-            </div>
-          </div>
-
-          {/* User Name */}
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-blue-700 mb-1 text-center">{user.name}</h2>
-          <p className="text-sm text-gray-500 mb-6 text-center">
-            Welcome to your CareerCraft profile
-          </p>
-
-          {/* Info Cards */}
-          <div className="w-full space-y-4">
-            <div className="flex items-center gap-3 bg-white border border-gray-200 rounded-lg px-4 py-3 shadow-sm hover:shadow transition">
-              <FaUserCircle className="text-indigo-600 text-xl" />
-              <span className="text-gray-800 font-medium break-all">{user.name}</span>
-            </div>
-
-            <div className="flex items-center gap-3 bg-white border border-gray-200 rounded-lg px-4 py-3 shadow-sm hover:shadow transition">
-              <FaEnvelope className="text-indigo-600 text-xl" />
-              <span className="text-gray-800 font-medium break-all">{user.email}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default Profile;
+  const { user, login, logout } = useAuth();
+  const fileRef = useRef(null);
+  const [editing,setEditing]=useState(false); const [name,setName]=useState(user?.name||""); const [profilePic,setProfilePic]=useState(user?.profilePic||""); const [saving,setSaving]=useState(false); const [deleting,setDeleting]=useState(false);
+  if (!user) return <div className="text-center mt-20 text-gray-600 text-lg">Loading profile...</div>;
+  const initials=user.name?.split(" ").map(n=>n[0]).join("").slice(0,2).toUpperCase();
+  const chooseImage=async(e)=>{const file=e.target.files?.[0];if(!file)return;try{setProfilePic(await compressImage(file));setEditing(true);}catch(err){toast.error(err.message)}e.target.value="";};
+  const save=async()=>{if(!name.trim())return toast.error("Name cannot be empty");setSaving(true);try{const res=await api.put("/auth/profile",{name,profilePic});login(localStorage.getItem("token"),res.data.user,{firebaseIdToken:localStorage.getItem("firebaseIdToken"),firebaseRefreshToken:localStorage.getItem("firebaseRefreshToken")});setEditing(false);toast.success("Profile updated successfully")}catch(err){toast.error(err.response?.data?.message||"Failed to update profile")}finally{setSaving(false)}};
+  const deleteProfile=async()=>{const phrase=window.prompt("This permanently deletes your profile, progress and quiz history. Type DELETE to continue.");if(phrase!=="DELETE")return;setDeleting(true);try{await api.delete("/auth/profile",{data:{firebaseIdToken:localStorage.getItem("firebaseIdToken"),firebaseRefreshToken:localStorage.getItem("firebaseRefreshToken")}});logout();toast.success("Your CareerCraft profile has been deleted");window.location.href="/"}catch(err){toast.error(err.response?.data?.message||"Failed to delete profile")}finally{setDeleting(false)}};
+  return <div className="min-h-[85vh] flex items-center justify-center px-4 py-12 sm:py-16 bg-gradient-to-br from-white to-blue-50"><motion.div initial={{opacity:0,y:25}} animate={{opacity:1,y:0}} className="w-full max-w-2xl bg-white/85 backdrop-blur-lg border border-gray-200 shadow-xl rounded-3xl p-6 sm:p-9 text-gray-800">
+    <div className="flex items-start justify-between gap-4"><div><p className="text-xs uppercase tracking-[0.2em] font-bold text-blue-600">Account</p><h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mt-1">Your Profile</h1><p className="text-sm text-gray-500 mt-1">Manage your identity and profile photo.</p></div>{!editing&&<button onClick={()=>setEditing(true)} className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-50 text-blue-700 font-semibold hover:bg-blue-100"><Edit3 size={17}/> Edit</button>}</div>
+    <div className="flex flex-col sm:flex-row items-center gap-6 mt-8 pb-7 border-b border-gray-100"><div className="relative"><div className="w-28 h-28 rounded-full overflow-hidden bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center text-4xl font-bold shadow-lg ring-4 ring-blue-100">{profilePic?<img src={profilePic} alt="Profile" className="w-full h-full object-cover"/>:initials}</div>{editing&&<><button type="button" onClick={()=>fileRef.current?.click()} className="absolute -bottom-1 -right-1 w-10 h-10 rounded-full bg-white shadow-md border border-gray-200 text-blue-600 flex items-center justify-center"><Camera size={18}/></button><input ref={fileRef} hidden type="file" accept="image/*" onChange={chooseImage}/></>}</div><div className="text-center sm:text-left"><h2 className="text-2xl font-bold text-gray-900">{user.name}</h2><p className="text-gray-500 mt-1">{user.email}</p>{editing&&<p className="text-xs text-gray-400 mt-2">JPG/PNG recommended • image is resized before saving</p>}</div></div>
+    {editing?<div className="space-y-5 mt-7"><div><label className="block text-sm font-semibold text-gray-700 mb-2">Full name</label><input value={name} onChange={e=>setName(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"/></div><div className="flex flex-wrap gap-3"><button onClick={save} disabled={saving} className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl font-semibold disabled:opacity-60"><Save size={17}/>{saving?"Saving…":"Save changes"}</button>{profilePic&&<button onClick={()=>{setProfilePic("");setEditing(true)}} className="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-100 text-gray-700 rounded-xl font-semibold"><X size={17}/> Remove photo</button>}<button onClick={()=>{setEditing(false);setName(user.name);setProfilePic(user.profilePic||"")}} className="px-5 py-2.5 rounded-xl font-semibold text-gray-500 hover:bg-gray-100">Cancel</button></div></div>:<div className="space-y-3 mt-7"><div className="flex items-center gap-3 bg-white border border-gray-200 rounded-xl px-4 py-3 shadow-sm"><FaUserCircle className="text-indigo-600" size={20}/><span className="font-medium">{user.name}</span></div><div className="flex items-center gap-3 bg-white border border-gray-200 rounded-xl px-4 py-3 shadow-sm"><FaEnvelope className="text-indigo-600" size={20}/><span className="font-medium break-all">{user.email}</span></div><div className="flex items-center gap-3 bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 text-sm text-blue-800"><ShieldCheck size={18}/><span>{user.authProvider === "google" ? "Signed in with Google" : "Email login enabled"}</span></div></div>}
+    <div className="mt-9 pt-6 border-t border-red-100"><div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4"><div><h3 className="font-bold text-red-700">Delete profile</h3><p className="text-sm text-gray-500 mt-1">This permanently removes your account, progress and quiz history.</p></div><button onClick={deleteProfile} disabled={deleting} className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-red-200 text-red-600 font-semibold disabled:opacity-60"><Trash2 size={17}/>{deleting?"Deleting…":"Delete profile"}</button></div></div>
+  </motion.div></div>;
+}; export default Profile;

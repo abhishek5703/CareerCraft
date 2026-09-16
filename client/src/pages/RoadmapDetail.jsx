@@ -154,20 +154,18 @@ const RoadmapDetail = () => {
                           </h4>
                           <p className="text-sm text-gray-600 mt-1 break-words">{step.description}</p>
 
-                          <ul className="mt-2 pl-4 list-disc text-blue-600 text-sm space-y-1 break-words overflow-hidden">
-                            {step.resources?.map((link, j) => (
-                              <li key={j}>
-                                <a
-                                  href={link}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="break-all underline underline-offset-2 hover:text-blue-800"
-                                >
-                                  {link}
-                                </a>
-                              </li>
-                            ))}
-                          </ul>
+                          {(step.smartResources?.length || step.resources?.length) > 0 && (
+                            <div className="mt-4">
+                              <div className="flex items-center gap-2 mb-3"><span className="text-xs font-bold uppercase tracking-wider text-indigo-600">Smart Resources</span><span className="text-[10px] rounded-full bg-indigo-50 text-indigo-600 px-2 py-0.5">Curated</span></div>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                {(step.smartResources || step.resources?.map((url) => ({ title: url, url, type: "Existing", description: "" }))).map((resource, j) => (
+                                  <a key={j} href={resource.url} target="_blank" rel="noreferrer" className="group rounded-xl border border-gray-200 bg-gray-50 hover:bg-white hover:border-blue-200 hover:shadow-sm p-3 transition">
+                                    <div className="flex items-start justify-between gap-3"><div><p className="font-semibold text-sm text-gray-900 group-hover:text-blue-700">{resource.title}</p><p className="text-xs text-gray-500 mt-1 line-clamp-2">{resource.description}</p></div><span className="shrink-0 text-[10px] rounded-full px-2 py-1 bg-blue-50 text-blue-700 font-semibold">{resource.type}</span></div>
+                                  </a>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </motion.div>
 
