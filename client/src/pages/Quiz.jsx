@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
@@ -17,105 +17,104 @@ const Quiz = () => {
   const [showReview, setShowReview] = useState(false);
   const [timer, setTimer] = useState(30);
   const [paused, setPaused] = useState(false);
+  const [loadError, setLoadError] = useState("");
+  const handleNextRef = useRef(null);
 
   useEffect(() => {
+    const controller = new AbortController();
     const fetchQuestions = async () => {
       try {
-        const res = await api.get(`/quiz/${roadmapId}`);
-        setQuestions(res.data);
-      } catch (err) {
-        console.error("Error fetching quiz", err);
+        const response = await api.get(`/quiz/${roadmapId}`, { signal: controller.signal });
+        setQuestions(Array.isArray(response.data) ? response.data : []);
+        setLoadError("");
+      } catch (error) {
+        if (!controller.signal.aborted) {
+          setLoadError(error.response?.data?.message || "Unable to load quiz questions. Please try again.");
+          console.error("Error fetching quiz", error);
+        }
       }
     };
     fetchQuestions();
+    return () => controller.abort();
   }, [roadmapId]);
 
-  useEffect(() => {
-    if (showResult || paused) return;
+  const handleNext = useCallback(async (skip = false) => {
+    const question = questions[current];
+    if (!question || showResult) return;
 
-    setTimer(30);
-    const interval = setInterval(() => {
-      setTimer((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          handleNext(true);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [current, paused]);
-
-  const handleOptionClick = (option) => setSelected(option);
-
-  const handleNext = async (skip = false) => {
-    const q = questions[current];
-    const correct = q.answer;
+    const correct = question.answer;
     const isCorrect = !skip && selected === correct;
+    const nextScore = score + (isCorrect ? 1 : 0);
 
-    setResponses([
-      ...responses,
+    setResponses((previous) => [
+      ...previous,
       {
-        question: q.question,
+        question: question.question,
         selected: skip ? null : selected,
         correct,
       },
     ]);
 
     if (current + 1 < questions.length) {
-      setCurrent(current + 1);
+      setCurrent((previous) => previous + 1);
       setSelected(null);
-      setScore(isCorrect ? score + 1 : score);
+      setScore(nextScore);
     } else {
-      setScore(isCorrect ? score + 1 : score);
+      setScore(nextScore);
       setShowResult(true);
       try {
         await api.post("/quiz/submit", {
-          userId: user._id,
+          userId: user?._id,
           roadmapId,
-          score: isCorrect ? score + 1 : score,
+          score: nextScore,
           total: questions.length,
         });
-      } catch (err) {
-        console.error("Error saving quiz result", err);
+      } catch (error) {
+        console.error("Error saving quiz result", error);
       }
     }
-  };
+  }, [questions, current, selected, score, showResult, user?._id, roadmapId]);
 
-  const timerColor =
-    timer > 15 ? "bg-green-500" : timer > 5 ? "bg-yellow-500" : "bg-red-500";
+  handleNextRef.current = handleNext;
+
+  useEffect(() => {
+    if (showResult || paused || questions.length === 0) return undefined;
+
+    setTimer(30);
+    const interval = setInterval(() => {
+      setTimer((previous) => {
+        if (previous <= 1) {
+          clearInterval(interval);
+          handleNextRef.current?.(true);
+          return 0;
+        }
+        return previous - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [current, paused, showResult, questions.length]);
+
+  const timerColor = timer > 15 ? "bg-green-500" : timer > 5 ? "bg-yellow-500" : "bg-red-500";
   const timerPercent = (timer / 30) * 100;
   const currentQuestion = questions[current];
 
-  if (questions.length === 0) return <div className="p-6 text-center">Loading questions...</div>;
+  if (loadError) return <div className="quiz-page"><div className="quiz-state-card"><h2>Quiz unavailable</h2><p>{loadError}</p><button type="button" onClick={() => window.location.reload()} className="btn-primary">Try again</button></div></div>;
+  if (questions.length === 0) return <div className="quiz-page"><div className="quiz-state-card"><span className="loading-spinner" /><p>Loading your quiz…</p></div></div>;
 
   if (showReview) {
     return (
-      <div className="p-6 space-y-4 max-w-3xl mx-auto">
-        <h2 className="text-3xl font-bold mb-6 text-center text-indigo-700">📝 Review Your Answers</h2>
-        {responses.map((res, idx) => (
-          <div key={idx} className="p-5 border rounded-xl bg-gray-50 shadow-sm">
-            <h3 className="font-semibold text-gray-800">{idx + 1}. {res.question}</h3>
-            <p className="mt-1">
-              Your Answer:{" "}
-              <span className={res.selected === res.correct ? "text-green-600" : "text-red-600"}>
-                {res.selected ?? "Skipped"}
-              </span>
-            </p>
-            <p className="text-sm text-gray-700">
-              Correct Answer: <span className="text-green-700">{res.correct}</span>
-            </p>
-          </div>
-        ))}
-        <div className="text-center mt-6">
-          <button
-            onClick={() => window.location.reload()}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-medium transition"
-          >
-            🔁 Retake Quiz
-          </button>
+      <div className="quiz-page">
+        <div className="quiz-review-shell">
+          <div className="quiz-page-heading"><span className="section-kicker">YOUR LEARNING CHECK-IN</span><h1>Review your answers</h1><p>Revisit each question and compare your response with the correct answer.</p></div>
+          {responses.map((response, index) => (
+            <article key={`${index}-${response.question}`} className="quiz-review-item">
+              <h3>{index + 1}. {response.question}</h3>
+              <p>Your answer: <strong className={response.selected === response.correct ? "answer-correct" : "answer-incorrect"}>{response.selected ?? "Skipped"}</strong></p>
+              <p>Correct answer: <strong className="answer-correct">{response.correct}</strong></p>
+            </article>
+          ))}
+          <div className="quiz-review-actions"><button type="button" onClick={() => window.location.reload()} className="btn-primary">Retake quiz</button></div>
         </div>
       </div>
     );
@@ -123,99 +122,51 @@ const Quiz = () => {
 
   if (showResult) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.4 }}
-          className="bg-white p-10 rounded-2xl shadow-xl max-w-md w-full"
-        >
-          <h2 className="text-3xl font-bold text-green-600 mb-4">🎉 Quiz Completed!</h2>
-          <p className="text-xl mb-6 font-medium">
-            Your Score: <span className="text-blue-700">{score} / {questions.length}</span>
-          </p>
-          <button
-            onClick={() => setShowReview(true)}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-semibold transition"
-          >
-            Review Answers
-          </button>
+      <div className="quiz-page">
+        <motion.div initial={{ scale: 0.94, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.35 }} className="quiz-result-card">
+          <div className="quiz-result-icon">✓</div>
+          <span className="section-kicker">QUIZ COMPLETE</span>
+          <h1>Nice work. Keep going.</h1>
+          <p>Your score</p>
+          <strong className="quiz-final-score">{score}<span> / {questions.length}</span></strong>
+          <p className="quiz-result-message">Every attempt is a chance to strengthen what you know.</p>
+          <button type="button" onClick={() => setShowReview(true)} className="btn-primary">Review your answers</button>
         </motion.div>
       </div>
     );
   }
 
+  if (!currentQuestion) return null;
+
   return (
-    <div className="p-6 max-w-xl mx-auto">
+    <div className="quiz-page">
       <AnimatePresence mode="wait">
-        <motion.div
+        <motion.section
           key={current}
-          initial={{ opacity: 0, x: 50 }}
+          initial={{ opacity: 0, x: 24 }}
           animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -50 }}
-          transition={{ duration: 0.3 }}
-          className="w-full"
+          exit={{ opacity: 0, x: -24 }}
+          transition={{ duration: 0.24 }}
+          className="quiz-card"
         >
-          {/* Timer Bar */}
-          <div className="flex items-center gap-2 mb-4">
-            <div className="flex-1 h-2 bg-gray-200 rounded overflow-hidden">
-              <div
-                className={`h-2 rounded ${timerColor} transition-all duration-500`}
-                style={{ width: `${timerPercent}%` }}
-              />
-            </div>
-            <span className="text-sm text-gray-700 font-medium">{timer}s</span>
-            <button
-              onClick={() => setPaused(!paused)}
-              className={`ml-2 text-xs px-2 py-1 rounded-full font-medium ${paused ? "bg-green-600 text-white" : "bg-red-500 text-white"} cursor-pointer`}
-            >
-              {paused ? " Resume " : " Pause "}
-            </button>
+          <div className="quiz-card-top"><span className="section-kicker">FOCUS MODE</span><span className="quiz-question-count">Question {current + 1} <i /> {questions.length}</span></div>
+          <div className="quiz-timer-row">
+            <div className="quiz-timer-track"><span className={timerColor} style={{ width: `${timerPercent}%` }} /></div>
+            <strong className={timer <= 5 ? "timer-urgent" : ""}>{timer}s</strong>
+            <button type="button" onClick={() => setPaused((previous) => !previous)} className={`quiz-pause-button${paused ? " is-paused" : ""}`}>{paused ? "Resume" : "Pause"}</button>
           </div>
-
-          {/* Question */}
-          <div className="text-sm text-gray-500 mb-1 font-medium">
-            Question {current + 1} of {questions.length}
-          </div>
-          <h3 className="mb-4 text-xl font-bold text-gray-900">{currentQuestion.question}</h3>
-
-          {/* Options */}
-          <div className="space-y-3">
-            {currentQuestion.options.map((option, idx) => (
-              <button
-                key={idx}
-                onClick={() => handleOptionClick(option)}
-                className={`block w-full text-left px-5 py-3 rounded-xl border font-medium transition ${selected === option
-                    ? "bg-indigo-600 text-white border-indigo-600"
-                    : "bg-white hover:bg-gray-300 border-gray-500"
-                  } cursor-pointer`}
-              >
-                {option}
+          {paused && <div className="quiz-paused-notice">Timer paused. Resume when you’re ready.</div>}
+          <div className="quiz-question-progress"><span style={{ width: `${((current + 1) / questions.length) * 100}%` }} /></div>
+          <div className="quiz-question-block"><span>QUESTION {String(current + 1).padStart(2, "0")}</span><h1>{currentQuestion.question}</h1></div>
+          <div className="quiz-options">
+            {currentQuestion.options.map((option, index) => (
+              <button key={`${current}-${index}`} type="button" onClick={() => setSelected(option)} className={`quiz-option${selected === option ? " is-selected" : ""}`}>
+                <span className="quiz-option-letter">{String.fromCharCode(65 + index)}</span><span>{option}</span><span className="quiz-option-check">{selected === option ? "✓" : ""}</span>
               </button>
             ))}
           </div>
-
-          {/* Controls */}
-          <div className="mt-8 flex justify-between gap-4">
-            <button
-              onClick={() => handleNext(true)}
-              className="bg-blue-100 hover:bg-blue-200 text-blue-800 px-5 py-2 rounded-lg font-semibold transition cursor-pointer"
-            >
-              Skip
-            </button>
-
-            <button
-              onClick={() => handleNext(false)}
-              disabled={!selected}
-              className={`px-6 py-2 rounded-lg font-semibold transition ${selected
-                  ? "bg-green-600 hover:bg-green-700 text-white"
-                  : "bg-gray-300 text-gray-600 cursor-not-allowed"
-                } cursor-pointer`}
-            >
-              {current + 1 < questions.length ? "Next" : "Submit"}
-            </button>
-          </div>
-        </motion.div>
+          <div className="quiz-controls"><button type="button" className="btn-secondary" onClick={() => handleNext(true)}>Skip question</button><button type="button" className="btn-primary" onClick={() => handleNext(false)} disabled={!selected}>{current + 1 < questions.length ? "Next question" : "Submit quiz"}</button></div>
+        </motion.section>
       </AnimatePresence>
     </div>
   );

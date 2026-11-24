@@ -1,25 +1,28 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useCallback, useContext, useMemo, useState } from "react";
 
-const ProgressContext = createContext();
+const ProgressContext = createContext(null);
 
 export const ProgressProvider = ({ children }) => {
   const [progressMap, setProgressMap] = useState({});
 
-  const updateProgress = (roadmapId, completedSteps, totalSteps) => {
-    setProgressMap((prev) => ({
-      ...prev,
+  const updateProgress = useCallback((roadmapId, completedSteps, totalSteps) => {
+    setProgressMap((previous) => ({
+      ...previous,
       [roadmapId]: {
         completed: completedSteps.length,
-        total: totalSteps, 
+        total: totalSteps,
       },
     }));
-  };
+  }, []);
 
-  return (
-    <ProgressContext.Provider value={{ progressMap, setProgressMap, updateProgress }}>
-      {children}
-    </ProgressContext.Provider>
-  );
+  const value = useMemo(() => ({ progressMap, setProgressMap, updateProgress }), [progressMap, updateProgress]);
+
+  return <ProgressContext.Provider value={value}>{children}</ProgressContext.Provider>;
 };
 
-export const useProgress = () => useContext(ProgressContext);
+// eslint-disable-next-line react-refresh/only-export-components
+export const useProgress = () => {
+  const context = useContext(ProgressContext);
+  if (!context) throw new Error("useProgress must be used within a ProgressProvider");
+  return context;
+};

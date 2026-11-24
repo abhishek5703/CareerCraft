@@ -1,80 +1,77 @@
 import { Link } from "react-router-dom";
-import { FaLinkedin, FaGithub, FaEnvelope } from "react-icons/fa";
+import {
+  ArrowRight,
+  ArrowUpRight,
+  Github,
+  Linkedin,
+  Rocket,
+  Sparkles,
+} from "lucide-react";
+import "./Footer.css";
 
 const Footer = () => {
+  const year = new Date().getFullYear();
+
   return (
-    <footer className="bg-gray-100 border-t border-gray-200 shadow-inner px-6 py-16 mt-28">
-      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
-        {/* Branding */}
-        <div className="space-y-3 md:col-span-1">
-          <h2 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
-            CareerCraft <span className="text-xl">🚀</span>
-          </h2>
-          <p className="text-sm text-gray-600 leading-relaxed">
-            Empowering learners and job-seekers to craft their careers with confidence and clarity.
-          </p>
-        </div>
+    <footer className="cc-footer">
+      <div className="cc-footer__inner">
+        <div className="cc-footer__grid">
+          <div className="cc-footer__brand-block">
+            <Link to="/" className="cc-footer__brand" aria-label="CareerCraft home">
+              <span className="cc-footer__logo"><Rocket size={21} /></span>
+              <span className="cc-footer__brand-name">Career<span>Craft</span></span>
+            </Link>
 
-        {/* Explore */}
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 border-b border-blue-500 inline-block pb-1">
-            Explore
-          </h3>
-          <ul className="space-y-2 text-sm text-gray-700">
-            <li><Link to="/" className="hover:text-blue-600 transition">Home</Link></li>
-            <li><Link to="/dashboard" className="hover:text-blue-600 transition">Dashboard</Link></li>
-            <li><Link to="/profile" className="hover:text-blue-600 transition">Profile</Link></li>
-            <li><Link to="/dashboard" className="hover:text-blue-600 transition">Quiz Results</Link></li>
-            <li><Link to="/dashboard" className="hover:text-blue-600 transition">Roadmaps</Link></li>
-          </ul>
-        </div>
+            <p className="cc-footer__description">
+              Build skills with direction. Turn your career goals into a clear,
+              achievable learning journey.
+            </p>
 
-        {/* Connect */}
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 border-b border-blue-500 inline-block pb-1">
-            Connect
-          </h3>
-          <div className="flex gap-5 mt-3 text-2xl text-gray-600">
-            <a href="https://www.linkedin.com/in/abhishekkumar8983/" target="_blank" rel="noreferrer" className="hover:text-blue-600 hover:scale-110 transition duration-300" title="LinkedIn">
-              <FaLinkedin />
-            </a>
-            <a href="https://github.com/abhishek5703" target="_blank" rel="noreferrer" className="hover:text-gray-900 hover:scale-110 transition duration-300" title="GitHub">
-              <FaGithub />
-            </a>
-            <a href="mailto:hello@careercraft.com" className="hover:text-pink-500 hover:scale-110 transition duration-300" title="Email">
-              <FaEnvelope />
-            </a>
+            <div className="cc-footer__socials" aria-label="Social links">
+              <a href="https://github.com/abhishek5703" target="_blank" rel="noopener noreferrer" aria-label="GitHub" title="GitHub">
+                <Github size={19} />
+              </a>
+              <a href="https://www.linkedin.com/in/abhishekkumar8983/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" title="LinkedIn">
+                <Linkedin size={19} />
+              </a>
+            </div>
+          </div>
+
+          <nav className="cc-footer__column" aria-label="Platform links">
+            <h3>Platform</h3>
+            <Link to="/">Home</Link>
+            <Link to="/dashboard">Explore roadmaps</Link>
+            <Link to="/profile">Your profile</Link>
+            <Link to="/about">About CareerCraft</Link>
+          </nav>
+
+          <nav className="cc-footer__column" aria-label="Getting started links">
+            <h3>Get started</h3>
+            <Link to="/signup">Create an account <ArrowUpRight size={14} /></Link>
+            <Link to="/login">Sign in</Link>
+            <Link to="/dashboard">Find your roadmap</Link>
+            <Link to="/about">How CareerCraft works</Link>
+          </nav>
+
+          <div className="cc-footer__feature">
+            <span className="cc-footer__feature-icon"><Sparkles size={19} /></span>
+            <span className="cc-footer__feature-label">YOUR NEXT CHAPTER</span>
+            <h3>Your future starts with one step.</h3>
+            <p>Choose a path, build new skills, track your progress, and keep moving forward.</p>
+            <Link to="/dashboard" className="cc-footer__cta">
+              Find your path <ArrowRight size={16} />
+            </Link>
           </div>
         </div>
 
-        {/* Newsletter */}
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 border-b border-blue-500 inline-block pb-1 ">
-            Subscribe
-          </h3>
-          <p className="text-sm text-gray-600 mb-3">
-            Join our newsletter to stay updated on the latest roadmaps and career tips.
-          </p>
-          <form onSubmit={(e) => e.preventDefault()} className="flex flex-col sm:flex-row items-center gap-3">
-            <input
-              type="email"
-              placeholder="Enter your email"
-              className="w-full px-4 py-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-blue-400 focus:outline-none text-sm bg-white"
-              required
-            />
-            <button
-              type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700 transition w-full sm:w-auto cursor-pointer"
-            >
-              Subscribe
-            </button>
-          </form>
+        <div className="cc-footer__bottom">
+          <p>© {year} <strong>CareerCraft.</strong> All rights reserved.</p>
+          <div className="cc-footer__bottom-right">
+            <span>Learn with purpose.</span>
+            <span className="cc-footer__separator" aria-hidden="true">·</span>
+            <span>Grow with confidence.</span>
+          </div>
         </div>
-      </div>
-
-      {/* Bottom */}
-      <div className="mt-12 pt-6 text-center text-sm text-gray-500 border-t border-gray-300">
-        © {new Date().getFullYear()} <span className="font-medium text-gray-700">CareerCraft</span>. All rights reserved.
       </div>
     </footer>
   );

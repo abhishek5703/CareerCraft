@@ -1,17 +1,16 @@
+import { Outlet } from "react-router-dom";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
-import { Outlet } from "react-router-dom";
 
-const Layout = () => {
-  return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-indigo-100 via-white to-blue-100 text-gray-900">
-      <Navbar />
-      <main className="flex-grow">
-        <Outlet />
-      </main>
-      <Footer />
-    </div>
-  );
-};
+const Layout = () => (
+  <div className="app-shell">
+    <a className="skip-link" href="#main-content">Skip to content</a>
+    <Navbar />
+    <main id="main-content" className="site-main">
+      <Outlet />
+    </main>
+    <Footer />
+  </div>
+);
 
 export default Layout;

@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
-import toast from "react-hot-toast";
-import { LogIn, Mail, Lock, Eye, EyeOff } from "lucide-react";
+import "./Auth.css";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { ArrowLeft, ArrowUpRight, Eye, EyeOff, Lock, Mail, ShieldCheck, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
+import toast from "react-hot-toast";
 import api from "../services/api";
+import { useAuth } from "../context/AuthContext";
 import { isGoogleAuthConfigured, renderGoogleButton, waitForGoogle } from "../services/firebaseGoogle";
 
 const Login = () => {
@@ -15,39 +16,73 @@ const Login = () => {
   const googleRef = useRef(null);
   const navigate = useNavigate();
 
-  const googleLogin = async (credential) => {
+  const googleLogin = useCallback(async (credential) => {
     try {
       setSubmitting(true);
-      const res = await api.post("/auth/google", { idToken: credential, requestUri: window.location.origin });
-      login(res.data.token, res.data.user, res.data);
+      const response = await api.post("/auth/google", { idToken: credential, requestUri: window.location.origin });
+      login(response.data.token, response.data.user, response.data);
       toast.success("Signed in with Google successfully");
-      navigate("/");
-    } catch (err) { toast.error(err.response?.data?.message || "Google sign-in failed"); }
-    finally { setSubmitting(false); }
-  };
+      navigate("/dashboard", { replace: true });
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Google sign-in failed");
+    } finally {
+      setSubmitting(false);
+    }
+  }, [login, navigate]);
 
-  useEffect(() => waitForGoogle(() => renderGoogleButton({ element: googleRef.current, onCredential: googleLogin })), []);
+  useEffect(() => waitForGoogle(() => renderGoogleButton({ element: googleRef.current, onCredential: googleLogin })), [googleLogin]);
 
-  const submit = async (e) => {
-    e.preventDefault();
+  const submit = async (event) => {
+    event.preventDefault();
     try {
       setSubmitting(true);
-      const res = await api.post("/auth/login", form);
-      login(res.data.token, res.data.user, res.data);
-      toast.success("Logged in successfully");
-      navigate("/");
-    } catch (err) { toast.error("Login failed: " + (err.response?.data?.message || err.message)); }
-    finally { setSubmitting(false); }
+      const response = await api.post("/auth/login", form);
+      login(response.data.token, response.data.user, response.data);
+      toast.success("Welcome back");
+      navigate("/dashboard", { replace: true });
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Unable to sign in. Please check your details.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  return <div className="min-h-[85vh] flex items-center justify-center px-4"><motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="w-full max-w-md bg-white/70 backdrop-blur-md border border-gray-200 shadow-xl rounded-2xl p-8">
-    <div className="text-center mb-6"><LogIn className="mx-auto mb-3 text-blue-600" size={36}/><h2 className="text-3xl font-bold text-blue-700">Welcome Back 👋</h2><p className="text-sm text-gray-600 mt-1">Login to access your dashboard</p></div>
-    <div className="mb-5"><div ref={googleRef} className="min-h-11 flex justify-center overflow-hidden" />{!isGoogleAuthConfigured() && <p className="text-xs text-gray-500 text-center mt-2">Google sign-in becomes available after Firebase/Google configuration.</p>}</div>
-    <div className="flex items-center gap-3 my-5"><div className="h-px flex-1 bg-gray-200"/><span className="text-xs text-gray-400">OR</span><div className="h-px flex-1 bg-gray-200"/></div>
-    <form onSubmit={submit} className="space-y-5"><div><label className="block text-sm font-medium text-gray-700 mb-1">Email</label><div className="relative"><Mail className="absolute left-3 top-2.5 text-gray-400" size={18}/><input name="email" type="email" required placeholder="you@example.com" value={form.email} onChange={(e)=>setForm({...form,email:e.target.value})} className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none text-sm"/></div></div>
-    <div><div className="flex justify-between items-center mb-1"><label className="block text-sm font-medium text-gray-700">Password</label><Link to="/forgot-password" className="text-xs text-blue-600 hover:underline">Forgot password?</Link></div><div className="relative"><Lock className="absolute left-3 top-2.5 text-gray-400" size={18}/><input name="password" type={showPassword?"text":"password"} required placeholder="••••••••" value={form.password} onChange={(e)=>setForm({...form,password:e.target.value})} className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none text-sm"/><button type="button" onClick={()=>setShowPassword(!showPassword)} className="absolute right-3 top-2.5 text-gray-500">{showPassword?<EyeOff size={18}/>:<Eye size={18}/>}</button></div></div>
-    <motion.button disabled={submitting} type="submit" whileTap={{scale:0.96}} className="w-full py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-lg shadow-lg disabled:opacity-60">{submitting?"Signing in…":"Login"}</motion.button></form>
-    <p className="text-center text-sm mt-6 text-gray-600">Don’t have an account? <Link to="/signup" className="text-blue-600 hover:underline font-medium">Sign up here</Link></p>
-  </motion.div></div>;
+  return (
+    <div className="auth-page">
+      <motion.div className="auth-shell" initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.42 }}>
+        <aside className="auth-aside">
+          <Link to="/" className="auth-aside-brand"><span className="auth-brand-mark"><Sparkles size={19} /></span> CareerCraft</Link>
+          <div className="auth-aside-content">
+            <span className="auth-aside-kicker">WELCOME BACK</span>
+            <h1>Your next step is closer than you think.</h1>
+            <p>Pick up where you left off. Your roadmaps and learning progress are right where you need them.</p>
+            <div className="auth-aside-points">
+              <span><ShieldCheck size={17} /> Your learning journey, in one place</span>
+              <span><Sparkles size={17} /> Clear paths for ambitious goals</span>
+            </div>
+          </div>
+          <div className="auth-aside-foot">LEARN WITH PURPOSE <i /> GROW WITH CONFIDENCE</div>
+          <div className="auth-aside-decoration auth-decoration-one" /><div className="auth-aside-decoration auth-decoration-two" />
+        </aside>
+
+        <section className="auth-form-panel">
+          <div className="auth-form-top"><Link to="/" className="auth-back-link"><ArrowLeft size={15} /> Back to home</Link><span className="auth-secure-label"><ShieldCheck size={14} /> Secure sign in</span></div>
+          <div className="auth-form-heading"><span className="auth-mobile-mark"><Sparkles size={18} /></span><span className="section-kicker">YOUR JOURNEY CONTINUES</span><h2>Welcome back</h2><p>Sign in to continue building your future.</p></div>
+
+          <div className="google-auth-area"><div ref={googleRef} className="google-button-slot" />{!isGoogleAuthConfigured() && <p className="auth-helper">Google sign-in will be available after Firebase is configured.</p>}</div>
+          <div className="auth-divider"><span /> <small>OR CONTINUE WITH EMAIL</small> <span /></div>
+
+          <form onSubmit={submit} className="auth-form">
+            <label className="auth-field"><span>Email address</span><div className="auth-input-wrap"><Mail size={17} /><input name="email" type="email" autoComplete="email" required placeholder="you@example.com" value={form.email} onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))} /></div></label>
+            <label className="auth-field"><span>Password</span><div className="auth-input-wrap"><Lock size={17} /><input name="password" type={showPassword ? "text" : "password"} autoComplete="current-password" required placeholder="Enter your password" value={form.password} onChange={(event) => setForm((current) => ({ ...current, password: event.target.value }))} /><button type="button" className="password-visibility" aria-label={showPassword ? "Hide password" : "Show password"} onClick={() => setShowPassword((visible) => !visible)}>{showPassword ? <EyeOff size={17} /> : <Eye size={17} />}</button></div></label>
+            <div className="auth-form-options"><span>Keep your account secure</span><Link to="/forgot-password">Forgot password?</Link></div>
+            <button type="submit" className="btn-primary auth-submit" disabled={submitting}>{submitting ? "Signing you in…" : "Sign in to CareerCraft"}<ArrowUpRight size={17} /></button>
+          </form>
+          <p className="auth-switch">New to CareerCraft? <Link to="/signup">Create an account <ArrowUpRight size={14} /></Link></p>
+        </section>
+      </motion.div>
+    </div>
+  );
 };
+
 export default Login;

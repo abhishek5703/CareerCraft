@@ -20,14 +20,16 @@ function App() {
     <BrowserRouter>
       {/* GLOBAL TOASTER */}
       <Toaster
-        position="top-center"
+        position="top-right"
         toastOptions={{
           style: {
             fontSize: "14px",
             background: "#ffffff",
-            color: "#1f2937",
-            borderRadius: "8px",
-            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+            color: "#26324f",
+            border: "1px solid #e8ebf3",
+            borderRadius: "12px",
+            boxShadow: "0 12px 32px rgba(34, 47, 86, 0.12)",
+            fontFamily: "DM Sans, sans-serif",
           },
           success: {
             iconTheme: {

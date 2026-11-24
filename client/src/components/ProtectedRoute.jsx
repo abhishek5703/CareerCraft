@@ -2,14 +2,13 @@ import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 const ProtectedRoute = ({ children }) => {
-  const { token } = useAuth();
+  const { token, loading } = useAuth();
 
-  // If no token → redirect to login
-  if (!token) {
-    return <Navigate to="/login" replace />;
+  if (loading) {
+    return <div className="route-loading" role="status"><span className="loading-spinner" />Preparing your workspace…</div>;
   }
 
-  // If logged in → render child component
+  if (!token) return <Navigate to="/login" replace />;
   return children;
 };
 

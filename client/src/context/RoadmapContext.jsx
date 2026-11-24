@@ -1,32 +1,43 @@
-import { createContext, useContext, useEffect, useState } from "react";
-import api from "../services/api"; 
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import api from "../services/api";
 
-const RoadmapContext = createContext();
+const RoadmapContext = createContext(null);
 
 export const RoadmapProvider = ({ children }) => {
   const [roadmaps, setRoadmaps] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
+    const controller = new AbortController();
+
     const fetchRoadmaps = async () => {
       try {
-        const res = await api.get("/roadmaps");
-        setRoadmaps(res.data); 
-      } catch (err) {
-        console.error("Failed to fetch roadmaps:", err);
+        const response = await api.get("/roadmaps", { signal: controller.signal });
+        setRoadmaps(Array.isArray(response.data) ? response.data : []);
+        setError("");
+      } catch (requestError) {
+        if (!controller.signal.aborted) {
+          setError(requestError.response?.data?.message || "Unable to load career roadmaps right now.");
+          console.error("Failed to fetch roadmaps:", requestError);
+        }
       } finally {
-        setLoading(false);
+        if (!controller.signal.aborted) setLoading(false);
       }
     };
 
     fetchRoadmaps();
+    return () => controller.abort();
   }, []);
 
-  return (
-    <RoadmapContext.Provider value={{ roadmaps, loading }}>
-      {children}
-    </RoadmapContext.Provider>
-  );
+  const value = useMemo(() => ({ roadmaps, loading, error, setRoadmaps }), [roadmaps, loading, error]);
+
+  return <RoadmapContext.Provider value={value}>{children}</RoadmapContext.Provider>;
 };
 
-export const useRoadmaps = () => useContext(RoadmapContext);
+// eslint-disable-next-line react-refresh/only-export-components
+export const useRoadmaps = () => {
+  const context = useContext(RoadmapContext);
+  if (!context) throw new Error("useRoadmaps must be used within a RoadmapProvider");
+  return context;
+};

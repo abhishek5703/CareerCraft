@@ -1,212 +1,188 @@
-import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { ArrowLeft, ArrowUpRight, BookOpen, CheckCircle, ChevronDown, ChevronUp, Circle, Sparkles } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import api from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { useProgress } from "../context/ProgressContext";
-import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, ChevronUp, CheckCircle } from "lucide-react";
 import RoadmapAIChatbot from "../components/RoadmapAIChatbot";
 
 const RoadmapDetail = () => {
   const { roadmapId } = useParams();
-  const { user, loading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { updateProgress } = useProgress();
 
   const [roadmap, setRoadmap] = useState(null);
   const [completedSteps, setCompletedSteps] = useState([]);
-  const [expandedSection, setExpandedSection] = useState(null);
+  const [expandedSection, setExpandedSection] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
 
   useEffect(() => {
-    if (loading || !user) return;
+    if (authLoading || !user) return undefined;
+
+    const controller = new AbortController();
+    setIsLoading(true);
 
     const fetchRoadmapAndProgress = async () => {
       try {
-        const res = await api.get(`/roadmaps/${roadmapId}`);
-        setRoadmap(res.data);
+        const [roadmapResult, progressResult] = await Promise.allSettled([
+          api.get(`/roadmaps/${roadmapId}`, { signal: controller.signal }),
+          api.get(`/progress/${roadmapId}`, { signal: controller.signal }),
+        ]);
 
-        const progressRes = await api.get(`/progress/${roadmapId}`);
-        const steps = progressRes.data.completedSteps || [];
+        if (controller.signal.aborted) return;
+        if (roadmapResult.status === "rejected") throw roadmapResult.reason;
+
+        const roadmapData = roadmapResult.value.data;
+        setRoadmap(roadmapData);
+
+        const steps = progressResult.status === "fulfilled"
+          ? (progressResult.value.data.completedSteps || [])
+          : [];
         setCompletedSteps(steps);
 
-        const totalSteps = res.data.sections?.reduce(
-          (acc, section) => acc + (section?.steps?.length || 0),
+        const totalSteps = (roadmapData.sections || []).reduce(
+          (total, section) => total + (section.steps?.length || 0),
           0
         );
         updateProgress(roadmapId, steps, totalSteps);
-      } catch (err) {
-        console.error("Error loading roadmap", err);
+        setLoadError("");
+      } catch (error) {
+        if (!controller.signal.aborted) {
+          setLoadError(error.response?.data?.message || "Unable to load this roadmap right now.");
+          console.error("Error loading roadmap", error);
+        }
       } finally {
-        setIsLoading(false);
+        if (!controller.signal.aborted) setIsLoading(false);
       }
     };
 
     fetchRoadmapAndProgress();
-  }, [roadmapId, user, loading]);
+    return () => controller.abort();
+  }, [roadmapId, user, authLoading, updateProgress]);
+
+  const sections = useMemo(() => roadmap?.sections || [], [roadmap]);
+  const allSteps = useMemo(() => sections.flatMap((section) => section.steps || []), [sections]);
+  const total = allSteps.length;
+  const completed = completedSteps.length;
+  const percentage = total ? Math.min(Math.round((completed / total) * 100), 100) : 0;
 
   const toggleStep = async (stepTitle) => {
-    const updatedSteps = completedSteps.includes(stepTitle)
-      ? completedSteps.filter((t) => t !== stepTitle)
-      : [...completedSteps, stepTitle];
-
+    const previousSteps = completedSteps;
+    const updatedSteps = previousSteps.includes(stepTitle)
+      ? previousSteps.filter((title) => title !== stepTitle)
+      : [...previousSteps, stepTitle];
     setCompletedSteps(updatedSteps);
+    updateProgress(roadmapId, updatedSteps, total);
 
     try {
-      await api.post("/progress/update", {
-        roadmapId,
-        completedSteps: updatedSteps,
-      });
-
-      const totalSteps = roadmap.sections?.reduce(
-        (acc, section) => acc + (section?.steps?.length || 0),
-        0
-      );
-      updateProgress(roadmapId, updatedSteps, totalSteps);
-    } catch (err) {
-      console.error("Error updating progress", err);
+      await api.post("/progress/update", { roadmapId, completedSteps: updatedSteps });
+    } catch (error) {
+      setCompletedSteps(previousSteps);
+      updateProgress(roadmapId, previousSteps, total);
+      console.error("Error updating progress", error);
     }
   };
 
-  const toggleSection = (index) => {
-    setExpandedSection(index === expandedSection ? null : index);
-  };
+  const toggleSection = (index) => setExpandedSection((current) => current === index ? null : index);
 
-  if (loading || isLoading || !roadmap)
-    return <div className="p-6 animate-pulse text-gray-600">Loading...</div>;
+  if (authLoading || isLoading) {
+    return <div className="route-loading" role="status"><span className="loading-spinner" />Loading your roadmap…</div>;
+  }
 
-  const allSteps = roadmap.sections.flatMap((sec) => sec.steps);
-  const total = allSteps.length;
-  const completed = completedSteps.length;
-  const percentage = Math.min(Math.round((completed / total) * 100), 100);
+  if (loadError || !roadmap) {
+    return <div className="roadmap-detail-page"><div className="dashboard-empty"><span className="empty-icon"><BookOpen size={24} /></span><h3>Roadmap unavailable</h3><p>{loadError || "This roadmap could not be found."}</p><button type="button" className="btn-secondary" onClick={() => navigate("/dashboard")}>Back to roadmaps</button></div></div>;
+  }
 
   return (
-    <div className="max-w-5xl mx-auto p-6 pt-10">
-      <h1 className="text-4xl font-extrabold text-gray-800 mb-2">{roadmap.title}</h1>
-      <p className="text-gray-600 mb-8 text-lg">{roadmap.description}</p>
+    <div className="roadmap-detail-page">
+      <Link to="/dashboard" className="roadmap-back-link"><ArrowLeft size={15} /> All career paths</Link>
 
-      {roadmap.sections.map((section, index) => {
-        const sectionTotal = section.steps.length;
-        const sectionCompleted = section.steps.filter((step) =>
-          completedSteps.includes(step.title)
-        ).length;
-        const sectionPercent = Math.round((sectionCompleted / sectionTotal) * 100);
-        const isOpen = expandedSection === index;
+      <section className="roadmap-detail-hero">
+        <div className="roadmap-detail-copy">
+          <span className="section-kicker"><Sparkles size={14} /> {roadmap.category || "CAREER ROADMAP"}</span>
+          <h1>{roadmap.title}</h1>
+          <p>{roadmap.description || "Follow this structured learning path, build your foundations, and track each milestone as you move forward."}</p>
+          <div className="roadmap-detail-meta"><span><BookOpen size={15} /> {sections.length} learning sections</span><span><CheckCircle size={15} /> {total} milestones</span></div>
+        </div>
+        <div className="roadmap-overview-card">
+          <div className="roadmap-overview-ring" style={{ "--progress": `${percentage}%` }}><div><strong>{percentage}%</strong><small>complete</small></div></div>
+          <div className="roadmap-overview-caption"><strong>Your progress</strong><span>{completed} of {total} milestones done</span></div>
+          <div className="roadmap-overview-track"><span style={{ width: `${percentage}%` }} /></div>
+        </div>
+      </section>
 
-        return (
-          <div key={index} className="mb-6 border border-gray-200 rounded-2xl shadow-md overflow-hidden">
-            <button
-              onClick={() => toggleSection(index)}
-              className="w-full flex justify-between items-center px-6 py-5 bg-gradient-to-r from-white to-gray-50 hover:to-gray-100 transition"
-            >
-              <div className="text-left w-full">
-                <h2 className="text-lg font-semibold text-gray-800">{`Section ${index + 1}: ${section.title}`}</h2>
-                <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
-                  <motion.div
-                    className="bg-gradient-to-r from-green-400 to-blue-500 h-2 rounded-full"
-                    animate={{ width: `${sectionPercent}%` }}
-                    transition={{ duration: 0.5 }}
-                  />
-                </div>
-                <p className="text-sm text-gray-500 mt-1">
-                  {sectionCompleted} of {sectionTotal} steps completed ({sectionPercent}%)
-                </p>
-              </div>
-              {isOpen ? <ChevronUp className="text-gray-600" /> : <ChevronDown className="text-gray-600" />}
-            </button>
+      <div className="roadmap-content-heading"><div><span className="section-kicker">THE LEARNING PLAN</span><h2>Work through the milestones</h2></div><span>{completed}/{total} completed</span></div>
 
-            <AnimatePresence initial={false}>
-              {isOpen && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.4 }}
-                  className="px-6 py-5 bg-white space-y-4"
-                >
-                  {section.steps.map((step, i) => {
-                    const isDone = completedSteps.includes(step.title);
-                    return (
-                      <motion.div
-                        key={i}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.03 * i }}
-                        className={`p-4 sm:p-5 rounded-xl border flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4 ${isDone
-                            ? "bg-green-50 border-green-300 shadow-inner"
-                            : "bg-white border-gray-200 hover:shadow-md"
-                          }`}
-                      >
-                        <div className="flex-shrink-0">
-                          <input
-                            type="checkbox"
-                            checked={isDone}
-                            onChange={() => toggleStep(step.title)}
-                            className="w-5 h-5 mt-1 accent-green-600"
-                          />
-                        </div>
-                        <div className="flex-1 overflow-hidden">
-                          <h4
-                            className={`font-semibold text-base break-words ${isDone ? "text-green-700 line-through" : "text-gray-900"
-                              }`}
-                          >
-                            Step {i + 1}: {step.title}
-                          </h4>
-                          <p className="text-sm text-gray-600 mt-1 break-words">{step.description}</p>
+      <div className="roadmap-sections-list">
+        {sections.map((section, index) => {
+          const steps = section.steps || [];
+          const sectionTotal = steps.length;
+          const sectionCompleted = steps.filter((step) => completedSteps.includes(step.title)).length;
+          const sectionPercent = sectionTotal ? Math.round((sectionCompleted / sectionTotal) * 100) : 0;
+          const isOpen = expandedSection === index;
 
-                          {(step.smartResources?.length || step.resources?.length) > 0 && (
-                            <div className="mt-4">
-                              <div className="flex items-center gap-2 mb-3"><span className="text-xs font-bold uppercase tracking-wider text-indigo-600">Smart Resources</span><span className="text-[10px] rounded-full bg-indigo-50 text-indigo-600 px-2 py-0.5">Curated</span></div>
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                {(step.smartResources || step.resources?.map((url) => ({ title: url, url, type: "Existing", description: "" }))).map((resource, j) => (
-                                  <a key={j} href={resource.url} target="_blank" rel="noreferrer" className="group rounded-xl border border-gray-200 bg-gray-50 hover:bg-white hover:border-blue-200 hover:shadow-sm p-3 transition">
-                                    <div className="flex items-start justify-between gap-3"><div><p className="font-semibold text-sm text-gray-900 group-hover:text-blue-700">{resource.title}</p><p className="text-xs text-gray-500 mt-1 line-clamp-2">{resource.description}</p></div><span className="shrink-0 text-[10px] rounded-full px-2 py-1 bg-blue-50 text-blue-700 font-semibold">{resource.type}</span></div>
-                                  </a>
-                                ))}
+          return (
+            <section key={section._id || `${section.title}-${index}`} className={`roadmap-section-card${isOpen ? " is-open" : ""}`}>
+              <button type="button" onClick={() => toggleSection(index)} className="roadmap-section-toggle" aria-expanded={isOpen}>
+                <span className="roadmap-section-index">{String(index + 1).padStart(2, "0")}</span>
+                <span className="roadmap-section-title-block"><strong>{section.title}</strong><small>{sectionCompleted} of {sectionTotal} milestones complete</small></span>
+                <span className="roadmap-section-progress"><strong>{sectionPercent}%</strong><span><i style={{ width: `${sectionPercent}%` }} /></span></span>
+                <span className="roadmap-section-chevron">{isOpen ? <ChevronUp size={19} /> : <ChevronDown size={19} />}</span>
+              </button>
+
+              <AnimatePresence initial={false}>
+                {isOpen && (
+                  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.25 }} className="roadmap-section-body">
+                    {steps.map((step, stepIndex) => {
+                      const isDone = completedSteps.includes(step.title);
+                      const resources = Array.isArray(step.smartResources) && step.smartResources.length
+                        ? step.smartResources
+                        : (step.resources || []).map((url) => ({ title: url, url, type: "Resource", description: "Open this learning resource" }));
+
+                      return (
+                        <article key={step._id || `${step.title}-${stepIndex}`} className={`roadmap-step-card${isDone ? " is-complete" : ""}`}>
+                          <button type="button" className={`roadmap-step-check${isDone ? " is-checked" : ""}`} aria-label={`${isDone ? "Mark incomplete" : "Mark complete"}: ${step.title}`} onClick={() => toggleStep(step.title)}>
+                            {isDone ? <CheckCircle size={18} /> : <Circle size={18} />}
+                          </button>
+                          <div className="roadmap-step-content">
+                            <div className="roadmap-step-title-row"><span>STEP {String(stepIndex + 1).padStart(2, "0")}</span>{isDone && <small>COMPLETED</small>}</div>
+                            <h3>{step.title}</h3>
+                            {step.description && <p>{step.description}</p>}
+                            {resources.length > 0 && (
+                              <div className="roadmap-resources">
+                                <span className="roadmap-resources-label">RECOMMENDED RESOURCES</span>
+                                <div className="roadmap-resource-grid">
+                                  {resources.map((resource, resourceIndex) => (
+                                    <a key={`${resource.url}-${resourceIndex}`} href={resource.url} target="_blank" rel="noreferrer" className="roadmap-resource-card">
+                                      <span><strong>{resource.title}</strong><small>{resource.description || resource.type || "Learning resource"}</small></span><ArrowUpRight size={15} />
+                                    </a>
+                                  ))}
+                                </div>
                               </div>
-                            </div>
-                          )}
-                        </div>
-                      </motion.div>
+                            )}
+                          </div>
+                        </article>
+                      );
+                    })}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </section>
+          );
+        })}
+      </div>
 
-                    );
-                  })}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        );
-      })}
-
-      {/* Completion Message */}
-      {completed === total && (
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="mt-12 text-center border border-green-400 bg-green-50 rounded-2xl shadow-xl p-8"
-        >
-          <CheckCircle className="w-10 h-10 text-green-600 mx-auto mb-3" />
-          <h2 className="text-2xl font-bold text-green-700 mb-2">🎉 You’ve completed this roadmap!</h2>
-          <p className="text-gray-700 mb-5">Ready to test your knowledge or check your quiz history?</p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button
-              onClick={() => navigate(`/quiz/${roadmapId}/instructions`)}
-              className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg font-medium transition cursor-pointer"
-            >
-              Take Quiz
-            </button>
-            <button
-              onClick={() => navigate(`/quiz/${roadmapId}/attempts`)}
-              className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-medium transition cursor-pointer"
-            >
-              View Past Attempts
-            </button>
-          </div>
-        </motion.div>
+      {total > 0 && completed >= total && (
+        <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="roadmap-complete-card">
+          <span className="roadmap-complete-icon"><CheckCircle size={24} /></span>
+          <div><span className="section-kicker">MILESTONE REACHED</span><h2>You’ve completed this roadmap.</h2><p>Put your knowledge to the test or review how you’ve performed in past attempts.</p></div>
+          <div className="roadmap-complete-actions"><button type="button" className="btn-primary" onClick={() => navigate(`/quiz/${roadmapId}/instructions`)}>Take quiz <ArrowUpRight size={16} /></button><button type="button" className="btn-secondary" onClick={() => navigate(`/quiz/${roadmapId}/attempts`)}>Quiz history</button></div>
+        </motion.section>
       )}
 
-      {/* AI CHATBOT */}
       <RoadmapAIChatbot roadmap={roadmap} />
     </div>
   );

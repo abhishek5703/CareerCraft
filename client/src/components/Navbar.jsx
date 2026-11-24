@@ -1,292 +1,194 @@
-import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { ArrowUpRight, ChevronRight, LogOut, Menu, Search, UserRound, X } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useRoadmaps } from "../context/RoadmapContext";
-import { Menu, X, Search } from "lucide-react";
-
-const imageMap = {
-  "Web Development": "/roadmaps/web-dev.jpg",
-  "Data Science": "/roadmaps/data-science.jpg",
-  "Mobile App Development": "/roadmaps/appdev.jpg",
-  "UI/UX Design": "/roadmaps/uiux-design.webp",
-  "Cybersecurity": "/roadmaps/cybersecurity.webp",
-  "Cloud & DevOps": "/roadmaps/cloud-devops.jpg",
-  "AI & Machine Learning Engineer": "/roadmaps/ai-ml.jpg",
-  "Blockchain Developer": "/roadmaps/Blockchain.jpg",
-  "Game Development": "/roadmaps/game-dev.png",
-  "Product Management": "/roadmaps/product-mangement.jpg",
-  "Technical Writing": "/roadmaps/tech-writing.png",
-  "Developer Relations (DevRel)": "/roadmaps/developer-relation.png",
-  "Data Engineering": "/roadmaps/data-engineer.png",
-};
-
-const animatedPlaceholders = [
-  "What roadmap are you looking for?",
-  "Explore Web Dev, AI, UI/UX, and more...",
-  "Find your next learning journey",
-  "Search roadmaps like Data Science, DevOps..."
-];
 
 const Navbar = () => {
   const { user, logout } = useAuth();
   const { roadmaps } = useRoadmaps();
   const navigate = useNavigate();
   const location = useLocation();
+  const searchRef = useRef(null);
 
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filteredRoadmaps, setFilteredRoadmaps] = useState([]);
-  const [highlightedIndex, setHighlightedIndex] = useState(-1);
-  const [typedPlaceholder, setTypedPlaceholder] = useState("");
+  const [highlightedIndex, setHighlightedIndex] = useState(0);
+  const [searchOpen, setSearchOpen] = useState(false);
 
-  const placeholderIndex = useRef(0);
-  const charIndex = useRef(-1);
-  const direction = useRef("forward");
-  const typingInterval = useRef(null);
-  const inputRef = useRef(null);
-
-  const isActive = (path) => location.pathname === path;
-  const toggleMenu = () => setIsMobileMenuOpen((prev) => !prev);
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
-  };
-
-  const navLinkClass = (path) =>
-    `text-sm font-semibold px-4 py-2 rounded-lg transition-all duration-200 ${isActive(path)
-      ? "bg-blue-100 text-blue-700"
-      : "text-gray-700 hover:bg-gray-100 hover:text-blue-600"
-    }`;
+  const filteredRoadmaps = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase();
+    if (!query) return [];
+    return roadmaps
+      .filter((roadmap) => `${roadmap.title || ""} ${roadmap.category || ""}`.toLowerCase().includes(query))
+      .slice(0, 6);
+  }, [roadmaps, searchTerm]);
 
   useEffect(() => {
-  typingInterval.current = setInterval(() => {
-    const text = animatedPlaceholders[placeholderIndex.current];
-
-    if (direction.current === "forward") {
-      charIndex.current++;
-      setTypedPlaceholder(text.substring(0, charIndex.current));
-
-      if (charIndex.current === text.length) {
-        direction.current = "backward";
-      }
-    } else {
-      charIndex.current--;
-      setTypedPlaceholder(text.substring(0, charIndex.current));
-
-      if (charIndex.current === 0) {
-        direction.current = "forward";
-        placeholderIndex.current =
-          (placeholderIndex.current + 1) % animatedPlaceholders.length;
-      }
-    }
-  }, 45);
-
-  return () => clearInterval(typingInterval.current);
-}, []);
-
+    setMobileMenuOpen(false);
+    setSearchOpen(false);
+  }, [location.pathname]);
 
   useEffect(() => {
-    if (!searchTerm.trim()) return setFilteredRoadmaps([]);
-
-    const timeout = setTimeout(() => {
-      const results = roadmaps.filter((r) =>
-        r.title.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      setFilteredRoadmaps(results);
-      setHighlightedIndex(0);
-    }, 200);
-
-    return () => clearTimeout(timeout);
-  }, [searchTerm, roadmaps]);
-
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (inputRef.current && !inputRef.current.contains(e.target)) {
-        setFilteredRoadmaps([]);
+    const handleOutsideClick = (event) => {
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        setSearchOpen(false);
       }
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
   }, []);
 
-  const handleKeyDown = (e) => {
-    if (e.key === "ArrowDown") {
-      setHighlightedIndex((prev) => (prev + 1) % filteredRoadmaps.length);
-    } else if (e.key === "ArrowUp") {
-      setHighlightedIndex((prev) =>
-        prev === 0 ? filteredRoadmaps.length - 1 : prev - 1
-      );
-    } else if (e.key === "Enter" && filteredRoadmaps[highlightedIndex]) {
-      navigate(`/roadmap/${filteredRoadmaps[highlightedIndex]._id}`);
-      resetSearch();
-    } else if (e.key === "Escape") {
-      setFilteredRoadmaps([]);
-    }
-  };
+  useEffect(() => setHighlightedIndex(0), [searchTerm]);
 
   const resetSearch = () => {
     setSearchTerm("");
-    setFilteredRoadmaps([]);
-    setIsMobileMenuOpen(false);
+    setSearchOpen(false);
+    setMobileMenuOpen(false);
   };
 
-  const renderSearchInput = () => (
-    <div
-      ref={inputRef}
-      className="relative flex items-center bg-gray-100 rounded-xl px-4 py-2 shadow-inner transition w-full md:w-[30rem] focus-within:ring-2 focus-within:ring-blue-500"
-    >
-      <Search className="text-gray-500 mr-2" size={18} />
-      <input
-        type="text"
-        placeholder={typedPlaceholder}
-        className="bg-transparent w-full text-sm outline-none placeholder-gray-500"
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        onKeyDown={handleKeyDown}
-      />
-      {filteredRoadmaps.length > 0 && (
-        <ul className="absolute top-full left-0 w-full bg-white shadow-xl border mt-2 rounded-xl z-50 max-h-72 overflow-y-auto">
-          {filteredRoadmaps.map((roadmap, i) => (
-            <li
+  const openRoadmap = (roadmap) => {
+    navigate(`/roadmap/${roadmap._id}`);
+    resetSearch();
+  };
+
+  const handleSearchKeyDown = (event) => {
+    if (event.key === "ArrowDown" && filteredRoadmaps.length) {
+      event.preventDefault();
+      setHighlightedIndex((current) => (current + 1) % filteredRoadmaps.length);
+    } else if (event.key === "ArrowUp" && filteredRoadmaps.length) {
+      event.preventDefault();
+      setHighlightedIndex((current) => (current - 1 + filteredRoadmaps.length) % filteredRoadmaps.length);
+    } else if (event.key === "Enter" && filteredRoadmaps[highlightedIndex]) {
+      event.preventDefault();
+      openRoadmap(filteredRoadmaps[highlightedIndex]);
+    } else if (event.key === "Escape") {
+      setSearchOpen(false);
+    }
+  };
+
+  const isActive = (path) => location.pathname === path || (path !== "/" && location.pathname.startsWith(`${path}/`));
+  const navLinkClass = (path) => `nav-link${isActive(path) ? " is-active" : ""}`;
+
+  const renderSearch = (mobile = false) => (
+    <div className={`nav-search-wrap${mobile ? " mobile-search-wrap" : ""}`}>
+      <div className={`nav-search${searchOpen ? " is-focused" : ""}`}>
+        <Search size={18} aria-hidden="true" />
+        <input
+          type="search"
+          value={searchTerm}
+          placeholder="Search career roadmaps..."
+          aria-label="Search career roadmaps"
+          aria-expanded={searchOpen && filteredRoadmaps.length > 0}
+          aria-controls={`roadmap-search-results-${mobile ? "mobile" : "desktop"}`}
+          onFocus={() => setSearchOpen(true)}
+          onChange={(event) => {
+            setSearchTerm(event.target.value);
+            setSearchOpen(true);
+          }}
+          onKeyDown={handleSearchKeyDown}
+        />
+        <kbd className="search-shortcut">⌘ K</kbd>
+      </div>
+      {searchOpen && searchTerm.trim() && (
+        <div id={`roadmap-search-results-${mobile ? "mobile" : "desktop"}`} className="search-results" role="listbox" aria-label="Roadmap search results">
+          {filteredRoadmaps.length ? filteredRoadmaps.map((roadmap, index) => (
+            <button
+              className={`search-result${highlightedIndex === index ? " is-highlighted" : ""}`}
+              type="button"
+              role="option"
+              aria-selected={highlightedIndex === index}
               key={roadmap._id}
-              onClick={() => {
-                navigate(`/roadmap/${roadmap._id}`);
-                resetSearch();
-              }}
-              className={`flex items-center gap-3 px-4 py-2 cursor-pointer transition-all ${highlightedIndex === i
-                ? "bg-blue-100"
-                : "hover:bg-blue-50"
-                }`}
-              onMouseEnter={() => setHighlightedIndex(i)}
+              onMouseEnter={() => setHighlightedIndex(index)}
+              onClick={() => openRoadmap(roadmap)}
             >
-              <img
-                src={imageMap[roadmap.title] || "/fallback-image.jpg"}
-                alt={roadmap.title}
-                className="w-6 h-6 rounded object-cover"
-              />
-              <span className="text-sm">{roadmap.title}</span>
-            </li>
-          ))}
-        </ul>
+              <span className="search-result-icon"><Search size={15} /></span>
+              <span className="search-result-copy">
+                <strong>{roadmap.title}</strong>
+                <small>{roadmap.category || "Career roadmap"}</small>
+              </span>
+              <ChevronRight size={16} />
+            </button>
+          )) : (
+            <p className="search-empty">No roadmaps match “{searchTerm.trim()}”.</p>
+          )}
+        </div>
       )}
     </div>
   );
 
+  const handleLogout = () => {
+    logout();
+    navigate("/login", { replace: true });
+    setMobileMenuOpen(false);
+  };
+
   return (
-    <>
-      <nav className="bg-white/80 backdrop-blur-lg shadow-md sticky top-0 z-50 border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16 items-center">
-            <Link to="/" className="flex items-center gap-2">
-              <img src="/logo.png" alt="CareerCraft" className="h-10 w-auto" />
-            </Link>
-            <div className="hidden md:flex flex-1 justify-center">
-              {renderSearchInput()}
-            </div>
-            <div className="hidden md:flex items-center gap-4">
-              <Link to="/" className={navLinkClass("/")}>Home</Link>
-              <Link to="/dashboard" className={navLinkClass("/dashboard")}>Explore</Link>
-              {user ? (
-                <>
-                  <Link to="/profile" className={navLinkClass("/profile")}>Profile</Link>
-                  <button
-                    onClick={handleLogout}
-                    className="text-sm font-semibold text-red-600 hover:text-red-800 cursor-pointer"
-                  >
-                    Logout
-                  </button>
-                </>
-              ) : (
-                <>
-                  <Link to="/login" className={navLinkClass("/login")}>Login</Link>
-                  <Link to="/signup" className={navLinkClass("/signup")}>Signup</Link>
-                </>
-              )}
-              <Link to="/about" className={navLinkClass("/about")}>About Us</Link>
-            </div>
-            <div className="md:hidden">
-              <button onClick={toggleMenu}>
-                {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+    <header className="site-nav" ref={searchRef}>
+      <div className="nav-inner">
+        <Link to="/" className="brand" aria-label="CareerCraft home" onClick={resetSearch}>
+          <img src="/logo.png" alt="CareerCraft" />
+        </Link>
+
+        <div className="nav-search-desktop">
+          {renderSearch()}
+        </div>
+
+        <nav className="nav-links" aria-label="Main navigation">
+          <Link to="/" className={navLinkClass("/")}>Home</Link>
+          <Link to="/dashboard" className={navLinkClass("/dashboard")}>Explore</Link>
+          <Link to="/about" className={navLinkClass("/about")}>About</Link>
+          {user ? (
+            <>
+              <Link to="/profile" className={`nav-link nav-profile${isActive("/profile") ? " is-active" : ""}`}>
+                <UserRound size={16} /> Profile
+              </Link>
+              <button type="button" className="nav-logout" onClick={handleLogout}>
+                <LogOut size={15} /> <span>Log out</span>
               </button>
+            </>
+          ) : (
+            <>
+              <Link to="/login" className={navLinkClass("/login")}>Log in</Link>
+              <Link to="/signup" className="nav-signup">Get started <ArrowUpRight size={15} /></Link>
+            </>
+          )}
+        </nav>
+
+        <button
+          type="button"
+          className="mobile-menu-toggle"
+          aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+          aria-expanded={mobileMenuOpen}
+          onClick={() => setMobileMenuOpen((open) => !open)}
+        >
+          {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+        </button>
+      </div>
+
+      <div className="nav-search-mobile">
+        {renderSearch(true)}
+      </div>
+
+      {mobileMenuOpen && (
+        <div className="mobile-nav-panel">
+          <Link to="/" className={navLinkClass("/")}>Home</Link>
+          <Link to="/dashboard" className={navLinkClass("/dashboard")}>Explore roadmaps</Link>
+          <Link to="/about" className={navLinkClass("/about")}>About CareerCraft</Link>
+          {user ? (
+            <>
+              <Link to="/profile" className={navLinkClass("/profile")}>Your profile</Link>
+              <button type="button" className="mobile-logout" onClick={handleLogout}><LogOut size={16} /> Log out</button>
+            </>
+          ) : (
+            <div className="mobile-auth-actions">
+              <Link to="/login" className="btn-secondary">Log in</Link>
+              <Link to="/signup" className="btn-primary">Create account <ArrowUpRight size={16} /></Link>
             </div>
-          </div>
-        </div>
-      </nav>
-
-      {!isMobileMenuOpen && (
-        <div className="md:hidden px-4 py-2 bg-white border-b sticky top-16 z-40">
-          {renderSearchInput()}
+          )}
         </div>
       )}
-
-      {isMobileMenuOpen && (
-        <div className="md:hidden px-4 pt-3 pb-6 space-y-2 border-t bg-white">
-          <div className="flex flex-col space-y-2">
-            <Link
-              to="/"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className={navLinkClass("/")}
-            >
-              Home
-            </Link>
-            <Link
-              to="/dashboard"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className={navLinkClass("/dashboard")}
-            >
-              Explore
-            </Link>
-            {user ? (
-              <>
-                <Link
-                  to="/profile"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className={navLinkClass("/profile")}
-                >
-                  Profile
-                </Link>
-                <Link
-                  to="/login"
-                  onClick={() => {
-                    handleLogout();
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className="block w-full text-left px-4 py-2 rounded-md text-sm font-medium text-red-600 hover:bg-red-50 transition cursor-pointer"
-                >
-                  Logout
-                </Link>
-              </>
-            ) : (
-              <>
-                <Link
-                  to="/login"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className={navLinkClass("/login")}
-                >
-                  Login
-                </Link>
-                <Link
-                  to="/signup"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className={navLinkClass("/signup")}
-                >
-                  Signup
-                </Link>
-              </>
-            )}
-            <Link
-              to="/about"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className={navLinkClass("/about")}
-            >
-              About Us
-            </Link>
-
-          </div>
-        </div>
-      )}
-
-    </>
+    </header>
   );
 };
 

@@ -1,45 +1,55 @@
-import { createContext, useContext, useEffect, useState } from "react";
-import toast from "react-hot-toast"; 
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import toast from "react-hot-toast";
 
-const AuthContext = createContext();
+const AuthContext = createContext(null);
+
+const getStoredUser = () => {
+  try {
+    const storedUser = localStorage.getItem("user");
+    return storedUser ? JSON.parse(storedUser) : null;
+  } catch {
+    localStorage.removeItem("user");
+    return null;
+  }
+};
 
 export const AuthProvider = ({ children }) => {
-  const [token, setToken] = useState(localStorage.getItem("token") || null);
+  const [token, setToken] = useState(() => localStorage.getItem("token") || null);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
+    setUser(getStoredUser());
     setLoading(false);
   }, []);
 
-  const login = (token, userData, firebaseData = {}) => {
-    localStorage.setItem("token", token);
+  const login = useCallback((nextToken, userData, firebaseData = {}) => {
+    localStorage.setItem("token", nextToken);
     localStorage.setItem("user", JSON.stringify(userData));
     if (firebaseData.firebaseIdToken) localStorage.setItem("firebaseIdToken", firebaseData.firebaseIdToken);
     if (firebaseData.firebaseRefreshToken) localStorage.setItem("firebaseRefreshToken", firebaseData.firebaseRefreshToken);
-    setToken(token);
+    setToken(nextToken);
     setUser(userData);
-  };
+  }, []);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     localStorage.removeItem("firebaseIdToken");
     localStorage.removeItem("firebaseRefreshToken");
     setToken(null);
     setUser(null);
-    toast.success("Logged out successfully"); 
-  };
+    toast.success("Logged out successfully");
+  }, []);
 
-  return (
-    <AuthContext.Provider value={{ token, user, login, logout, loading }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  const value = useMemo(() => ({ token, user, login, logout, loading }), [token, user, login, logout, loading]);
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-export const useAuth = () => useContext(AuthContext);
+// eslint-disable-next-line react-refresh/only-export-components
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) throw new Error("useAuth must be used within an AuthProvider");
+  return context;
+};
