@@ -1,4 +1,5 @@
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import api from "../services/api";
 
 const RoadmapContext = createContext(null);
@@ -8,29 +9,32 @@ export const RoadmapProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    const controller = new AbortController();
-
-    const fetchRoadmaps = async () => {
-      try {
-        const response = await api.get("/roadmaps", { signal: controller.signal });
-        setRoadmaps(Array.isArray(response.data) ? response.data : []);
-        setError("");
-      } catch (requestError) {
-        if (!controller.signal.aborted) {
-          setError(requestError.response?.data?.message || "Unable to load career roadmaps right now.");
-          console.error("Failed to fetch roadmaps:", requestError);
-        }
-      } finally {
-        if (!controller.signal.aborted) setLoading(false);
+  const refreshRoadmaps = useCallback(async (signal) => {
+    setLoading(true);
+    try {
+      const response = await api.get("/roadmaps", { signal });
+      setRoadmaps(Array.isArray(response.data) ? response.data : []);
+      setError("");
+    } catch (requestError) {
+      if (!signal?.aborted) {
+        setError(requestError.response?.data?.message || "Unable to load career roadmaps right now.");
+        console.error("Failed to fetch roadmaps:", requestError);
       }
-    };
-
-    fetchRoadmaps();
-    return () => controller.abort();
+    } finally {
+      if (!signal?.aborted) setLoading(false);
+    }
   }, []);
 
-  const value = useMemo(() => ({ roadmaps, loading, error, setRoadmaps }), [roadmaps, loading, error]);
+  useEffect(() => {
+    const controller = new AbortController();
+    refreshRoadmaps(controller.signal);
+    return () => controller.abort();
+  }, [refreshRoadmaps]);
+
+  const value = useMemo(
+    () => ({ roadmaps, loading, error, setRoadmaps, refreshRoadmaps }),
+    [roadmaps, loading, error, refreshRoadmaps]
+  );
 
   return <RoadmapContext.Provider value={value}>{children}</RoadmapContext.Provider>;
 };

@@ -1,6 +1,8 @@
+
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowUpRight, BookOpen, CheckCircle2, ChevronRight, Compass, Search, Sparkles } from "lucide-react";
+import "./Dashboard.css";
 import { motion } from "framer-motion";
 import { useAuth } from "../context/AuthContext";
 import { useProgress } from "../context/ProgressContext";
@@ -8,8 +10,8 @@ import { useRoadmaps } from "../context/RoadmapContext";
 import api from "../services/api";
 
 const Dashboard = () => {
-  const { user } = useAuth();
-  const { roadmaps, loading: roadmapsLoading, error: roadmapsError } = useRoadmaps();
+  const { user, token } = useAuth();
+  const { roadmaps, loading: roadmapsLoading, error: roadmapsError, refreshRoadmaps } = useRoadmaps();
   const { progressMap, setProgressMap } = useProgress();
   const [progressLoading, setProgressLoading] = useState(true);
   const [progressError, setProgressError] = useState("");
@@ -17,7 +19,7 @@ const Dashboard = () => {
   const [activeCategory, setActiveCategory] = useState("All paths");
 
   useEffect(() => {
-    if (!user?._id) {
+    if (!token || !user?._id) {
       setProgressLoading(false);
       return undefined;
     }
@@ -40,14 +42,21 @@ const Dashboard = () => {
         setProgressError("");
       })
       .catch((error) => {
-        if (!controller.signal.aborted) setProgressError(error.response?.data?.message || "Progress could not be refreshed. Your roadmaps are still available.");
+        if (!controller.signal.aborted) {
+          const message = error.response?.data?.message;
+          setProgressError(
+            message === "Access denied: No token"
+              ? "Your roadmaps are available, but your session needs to be refreshed to sync learning progress."
+              : "Progress could not be refreshed. Your roadmaps are still available."
+          );
+        }
       })
       .finally(() => {
         if (!controller.signal.aborted) setProgressLoading(false);
       });
 
     return () => controller.abort();
-  }, [user?._id, setProgressMap]);
+  }, [token, user?._id, setProgressMap]);
 
   const categories = useMemo(() => {
     const available = [...new Set(roadmaps.map((roadmap) => roadmap.category).filter(Boolean))].sort((a, b) => a.localeCompare(b));
@@ -72,7 +81,8 @@ const Dashboard = () => {
     return { total: roadmaps.length, started, completed };
   }, [roadmaps, progressMap]);
 
-  const isLoading = roadmapsLoading || progressLoading;
+  // The public roadmap catalogue must never wait for the private progress API.
+  const isLoading = roadmapsLoading;
 
   return (
     <div className="dashboard-page">
@@ -86,7 +96,7 @@ const Dashboard = () => {
       </section>
 
       <section className="dashboard-stats" aria-label="Learning overview">
-        <div className="dashboard-stat"><span className="dashboard-stat-icon stat-violet"><BookOpen size={18} /></span><div><strong>{roadmapsLoading ? "—" : stats.total}</strong><small>Career paths</small></div></div>
+        <div className="dashboard-stat"><span className="dashboard-stat-icon stat-violet"><BookOpen size={18} /></span><div><strong>{roadmapsLoading || roadmapsError ? "—" : stats.total}</strong><small>Career paths</small></div></div>
         <div className="dashboard-stat"><span className="dashboard-stat-icon stat-blue"><Compass size={18} /></span><div><strong>{roadmapsLoading || progressLoading ? "—" : stats.started}</strong><small>Paths started</small></div></div>
         <div className="dashboard-stat"><span className="dashboard-stat-icon stat-green"><CheckCircle2 size={18} /></span><div><strong>{roadmapsLoading || progressLoading ? "—" : stats.completed}</strong><small>Paths completed</small></div></div>
       </section>
@@ -94,7 +104,7 @@ const Dashboard = () => {
       <section className="dashboard-library">
         <div className="dashboard-section-heading">
           <div><span className="section-kicker">EXPLORE YOUR OPTIONS</span><h2>Find your learning path</h2><p>Choose a roadmap and turn your goal into a series of achievable milestones.</p></div>
-          <span className="roadmap-count">{roadmaps.length} {roadmaps.length === 1 ? "path" : "paths"} available</span>
+          <span className="roadmap-count">{roadmapsLoading ? "Loading paths…" : roadmapsError ? "Catalogue unavailable" : `${roadmaps.length} ${roadmaps.length === 1 ? "path" : "paths"} available`}</span>
         </div>
 
         <div className="roadmap-toolbar">
@@ -113,7 +123,7 @@ const Dashboard = () => {
             {[1, 2, 3, 4, 5, 6].map((item) => <div className="roadmap-skeleton" key={item}><div className="skeleton-image" /><div className="skeleton-line skeleton-line-wide" /><div className="skeleton-line" /><div className="skeleton-line skeleton-line-short" /></div>)}
           </div>
         ) : roadmapsError && !roadmaps.length ? (
-          <div className="dashboard-empty"><span className="empty-icon"><Compass size={24} /></span><h3>Roadmaps are taking a break</h3><p>{roadmapsError}</p><button type="button" className="btn-primary" onClick={() => window.location.reload()}>Try again</button></div>
+          <div className="dashboard-empty"><span className="empty-icon"><Compass size={24} /></span><h3>Roadmaps are taking a break</h3><p>{roadmapsError}</p><button type="button" className="btn-primary" onClick={refreshRoadmaps}>Try again</button></div>
         ) : filteredRoadmaps.length ? (
           <div className="roadmap-grid">
             {filteredRoadmaps.map((roadmap, index) => {
@@ -153,7 +163,7 @@ const Dashboard = () => {
             })}
           </div>
         ) : (
-          <div className="dashboard-empty"><span className="empty-icon"><Search size={24} /></span><h3>No matching roadmaps</h3><p>Try another search term or switch to a different category.</p><button type="button" className="btn-secondary" onClick={() => { setSearchTerm(""); setActiveCategory("All paths"); }}>Clear filters</button></div>
+          <div className="dashboard-empty"><span className="empty-icon"><Search size={24} /></span><h3>{roadmaps.length ? "No matching roadmaps" : "No roadmaps published yet"}</h3><p>{roadmaps.length ? "Try another search term or switch to a different category." : "The catalogue is connected, but there are no career paths in the database yet."}</p>{roadmaps.length ? <button type="button" className="btn-secondary" onClick={() => { setSearchTerm(""); setActiveCategory("All paths"); }}>Clear filters</button> : <button type="button" className="btn-secondary" onClick={refreshRoadmaps}>Refresh catalogue</button>}</div>
         )}
       </section>
     </div>

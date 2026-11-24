@@ -1,3 +1,4 @@
+
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, ArrowUpRight, BookOpen, CheckCircle, ChevronDown, ChevronUp, Circle, Sparkles } from "lucide-react";
@@ -6,6 +7,7 @@ import api from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { useProgress } from "../context/ProgressContext";
 import RoadmapAIChatbot from "../components/RoadmapAIChatbot";
+import "./RoadmapDetail.css";
 
 const RoadmapDetail = () => {
   const { roadmapId } = useParams();
