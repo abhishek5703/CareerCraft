@@ -181,7 +181,7 @@ const RoadmapAIChatbot = ({ roadmap }) => {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-xl flex items-center justify-center transition-all duration-200 hover:scale-105 cursor-pointer"
+          className="roadmap-ai-chat-launcher fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-xl flex items-center justify-center transition-all duration-200 hover:scale-105 cursor-pointer"
           aria-label="Open AI chatbot"
         >
           <MessageCircle size={26} />
@@ -189,7 +189,7 @@ const RoadmapAIChatbot = ({ roadmap }) => {
       )}
 
       {isOpen && (
-        <div className="fixed bottom-6 right-6 z-50 w-[380px] max-w-[calc(100vw-2rem)] h-[560px] bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden">
+        <div className="roadmap-ai-chat-window fixed bottom-6 right-6 z-50 w-[380px] max-w-[calc(100vw-2rem)] h-[560px] bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden">
           <div className="bg-blue-600 text-white px-4 py-4 flex items-center justify-between">
             <div className="flex items-center gap-3 min-w-0">
               <div className="w-9 h-9 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">

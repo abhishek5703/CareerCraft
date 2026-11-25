@@ -1,3 +1,4 @@
+
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ArrowUpRight, ChevronRight, LogOut, Menu, Search, UserRound, X } from "lucide-react";
@@ -171,19 +172,19 @@ const Navbar = () => {
       </div>
 
       {mobileMenuOpen && (
-        <div className="mobile-nav-panel">
-          <Link to="/" className={navLinkClass("/")}>Home</Link>
-          <Link to="/dashboard" className={navLinkClass("/dashboard")}>Explore roadmaps</Link>
-          <Link to="/about" className={navLinkClass("/about")}>About CareerCraft</Link>
+        <div id="mobile-navigation" className="mobile-nav-panel">
+          <Link to="/" className={navLinkClass("/")} onClick={() => setMobileMenuOpen(false)}>Home</Link>
+          <Link to="/dashboard" className={navLinkClass("/dashboard")} onClick={() => setMobileMenuOpen(false)}>Explore roadmaps</Link>
+          <Link to="/about" className={navLinkClass("/about")} onClick={() => setMobileMenuOpen(false)}>About CareerCraft</Link>
           {user ? (
             <>
-              <Link to="/profile" className={navLinkClass("/profile")}>Your profile</Link>
+              <Link to="/profile" className={navLinkClass("/profile")} onClick={() => setMobileMenuOpen(false)}>Your profile</Link>
               <button type="button" className="mobile-logout" onClick={handleLogout}><LogOut size={16} /> Log out</button>
             </>
           ) : (
             <div className="mobile-auth-actions">
-              <Link to="/login" className="btn-secondary">Log in</Link>
-              <Link to="/signup" className="btn-primary">Create account <ArrowUpRight size={16} /></Link>
+              <Link to="/login" className="btn-secondary" onClick={() => setMobileMenuOpen(false)}>Log in</Link>
+              <Link to="/signup" className="btn-primary" onClick={() => setMobileMenuOpen(false)}>Create account <ArrowUpRight size={16} /></Link>
             </div>
           )}
         </div>
